@@ -4,7 +4,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"emettre\"")
+@Table(name = "emettre")
 @IdClass(Emettre.class)
 public class Emettre {
     @Id

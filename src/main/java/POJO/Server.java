@@ -3,7 +3,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"Server\"")
+@Table(name = "Server")
 public class Server {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -3,7 +3,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"ecrire\"")
+@Table(name = "ecrire")
 public class Ecrire {
     @Id
     @OneToOne

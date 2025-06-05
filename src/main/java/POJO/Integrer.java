@@ -3,7 +3,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"integrer\"")
+@Table(name = "integrer")
 @IdClass(Integrer.class)
 public class Integrer {
     @Id
