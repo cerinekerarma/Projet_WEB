@@ -18,5 +18,27 @@ public class Ecrire {
     @JoinColumn(name = "id_user2", referencedColumnName = "id_user")
     private User receiver;
 
-    // Getters/Setters
+    public Message getMessage() {
+        return message;
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public User getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(User receiver) {
+        this.receiver = receiver;
+    }
 }
