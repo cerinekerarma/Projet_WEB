@@ -4,8 +4,8 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"emettre\"")
-@IdClass(EmettreId.class)
+@Table(name = "emettre")
+@IdClass(Emettre.class)
 public class Emettre {
     @Id
     @ManyToOne
@@ -18,6 +18,8 @@ public class Emettre {
     private User user;
 
     private String reaction;
+
+    // Getters/Setters
 
     public Message getMessage() {
         return message;

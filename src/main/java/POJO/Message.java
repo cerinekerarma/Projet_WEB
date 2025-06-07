@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "\"Message\"")
+@Table(name = "Message")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,6 +17,8 @@ public class Message {
     @Column(name = "date_envoie")
     @Temporal(TemporalType.DATE)
     private Date sendDate;
+
+    // Getters/Setters
 
     public Integer getId() {
         return id;

@@ -3,7 +3,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"Server\"")
+@Table(name = "Server")
 public class Server {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,6 +15,8 @@ public class Server {
     @ManyToOne
     @JoinColumn(name = "id_admin", referencedColumnName = "id_user")
     private User admin;
+
+    // Getters/Setters
 
     public Integer getId() {
         return id;

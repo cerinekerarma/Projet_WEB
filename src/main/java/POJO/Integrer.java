@@ -3,8 +3,8 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"integrer\"")
-@IdClass(IntegrerId.class)
+@Table(name = "integrer")
+@IdClass(Integrer.class)
 public class Integrer {
     @Id
     @ManyToOne
@@ -15,6 +15,8 @@ public class Integrer {
     @ManyToOne
     @JoinColumn(name = "id_server", referencedColumnName = "id_server")
     private Server server;
+
+    // Getters/Setters
 
     public User getUser() {
         return user;

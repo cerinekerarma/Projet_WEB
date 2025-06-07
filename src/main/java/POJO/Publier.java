@@ -3,7 +3,7 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "\"publier\"")
+@Table(name = "publier")
 public class Publier {
     @Id
     @OneToOne
@@ -17,6 +17,8 @@ public class Publier {
     @ManyToOne
     @JoinColumn(name = "id_user", referencedColumnName = "id_user")
     private User user;
+
+    // Getters/Setters
 
     public Message getMessage() {
         return message;
