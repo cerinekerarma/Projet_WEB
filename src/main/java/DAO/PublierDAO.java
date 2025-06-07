@@ -1,50 +1,50 @@
 package DAO;
 
-import POJO.User;
+import POJO.Publier;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.List;
 
-public class UserDAO {
+public class PublierDAO {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
-    public void create(User user) {
+    public void create(Publier publier) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.persist(user);
+        em.persist(publier);
         em.getTransaction().commit();
         em.close();
     }
 
-    public User findById(int id) {
+    public Publier findById(int id) {
         EntityManager em = emf.createEntityManager();
-        User user = em.find(User.class, id);
+        Publier publier = em.find(Publier.class, id);
         em.close();
-        return user;
+        return publier;
     }
 
-    public List<User> findAll() {
+    public List<Publier> findAll() {
         EntityManager em = emf.createEntityManager();
-        List<User> users = em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        List<Publier> list = em.createQuery("SELECT p FROM Publier p", Publier.class).getResultList();
         em.close();
-        return users;
+        return list;
     }
 
-    public void update(User user) {
+    public void update(Publier publier) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.merge(user);
+        em.merge(publier);
         em.getTransaction().commit();
         em.close();
     }
 
-    public void delete(User user) {
+    public void delete(Publier publier) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        User managedUser = em.merge(user); // Nécessaire s’il est détaché
-        em.remove(managedUser);
+        Publier managedPublier = em.merge(publier);
+        em.remove(managedPublier);
         em.getTransaction().commit();
         em.close();
     }

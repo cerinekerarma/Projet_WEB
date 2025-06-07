@@ -14,6 +14,10 @@ public class EmettreId implements Serializable {
         this.user = user;
     }
 
+    public EmettreId(int idMessage) {
+        this.message = idMessage;
+    }
+
     public Integer getMessage() {
         return message;
     }

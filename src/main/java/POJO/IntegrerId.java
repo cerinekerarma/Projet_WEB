@@ -10,6 +10,11 @@ public class IntegrerId implements Serializable {
     public IntegrerId() {
     }
 
+    public IntegrerId(Integer userId, Integer serverId) {
+        this.user = userId;
+        this.server = serverId;
+    }
+
     public Integer getUser() {
         return user;
     }

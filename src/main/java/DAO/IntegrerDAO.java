@@ -1,50 +1,50 @@
 package DAO;
 
-import POJO.User;
+import POJO.Integrer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.List;
 
-public class UserDAO {
+public class IntegrerDAO {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
-    public void create(User user) {
+    public void create(Integrer integrer) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.persist(user);
+        em.persist(integrer);
         em.getTransaction().commit();
         em.close();
     }
 
-    public User findById(int id) {
+    public Integrer findById(int id) {
         EntityManager em = emf.createEntityManager();
-        User user = em.find(User.class, id);
+        Integrer integrer = em.find(Integrer.class, id);
         em.close();
-        return user;
+        return integrer;
     }
 
-    public List<User> findAll() {
+    public List<Integrer> findAll() {
         EntityManager em = emf.createEntityManager();
-        List<User> users = em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        List<Integrer> list = em.createQuery("SELECT i FROM Integrer i", Integrer.class).getResultList();
         em.close();
-        return users;
+        return list;
     }
 
-    public void update(User user) {
+    public void update(Integrer integrer) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.merge(user);
+        em.merge(integrer);
         em.getTransaction().commit();
         em.close();
     }
 
-    public void delete(User user) {
+    public void delete(Integrer integrer) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        User managedUser = em.merge(user); // Nécessaire s’il est détaché
-        em.remove(managedUser);
+        Integrer managed = em.merge(integrer);
+        em.remove(managed);
         em.getTransaction().commit();
         em.close();
     }

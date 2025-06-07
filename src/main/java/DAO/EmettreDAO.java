@@ -1,50 +1,50 @@
 package DAO;
 
-import POJO.User;
+import POJO.Emettre;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.List;
 
-public class UserDAO {
+public class EmettreDAO {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
-    public void create(User user) {
+    public void create(Emettre emettre) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.persist(user);
+        em.persist(emettre);
         em.getTransaction().commit();
         em.close();
     }
 
-    public User findById(int id) {
+    public Emettre findById(int id) {
         EntityManager em = emf.createEntityManager();
-        User user = em.find(User.class, id);
+        Emettre emettre = em.find(Emettre.class, id);
         em.close();
-        return user;
+        return emettre;
     }
 
-    public List<User> findAll() {
+    public List<Emettre> findAll() {
         EntityManager em = emf.createEntityManager();
-        List<User> users = em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        List<Emettre> list = em.createQuery("SELECT e FROM Emettre e", Emettre.class).getResultList();
         em.close();
-        return users;
+        return list;
     }
 
-    public void update(User user) {
+    public void update(Emettre emettre) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.merge(user);
+        em.merge(emettre);
         em.getTransaction().commit();
         em.close();
     }
 
-    public void delete(User user) {
+    public void delete(Emettre emettre) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        User managedUser = em.merge(user); // Nécessaire s’il est détaché
-        em.remove(managedUser);
+        Emettre managed = em.merge(emettre);
+        em.remove(managed);
         em.getTransaction().commit();
         em.close();
     }

@@ -1,51 +1,53 @@
 package DAO;
 
-import POJO.User;
+import POJO.Server;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.List;
 
-public class UserDAO {
+public class ServerDAO {
+
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
-    public void create(User user) {
+    public void create(Server server) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.persist(user);
+        em.persist(server);
         em.getTransaction().commit();
         em.close();
     }
 
-    public User findById(int id) {
+    public Server findById(int id) {
         EntityManager em = emf.createEntityManager();
-        User user = em.find(User.class, id);
+        Server server = em.find(Server.class, id);
         em.close();
-        return user;
+        return server;
     }
 
-    public List<User> findAll() {
+    public List<Server> findAll() {
         EntityManager em = emf.createEntityManager();
-        List<User> users = em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        List<Server> servers = em.createQuery("SELECT s FROM Server s", Server.class).getResultList();
         em.close();
-        return users;
+        return servers;
     }
 
-    public void update(User user) {
+    public void update(Server server) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        em.merge(user);
+        em.merge(server);
         em.getTransaction().commit();
         em.close();
     }
 
-    public void delete(User user) {
+    public void delete(Server server) {
         EntityManager em = emf.createEntityManager();
         em.getTransaction().begin();
-        User managedUser = em.merge(user); // Nécessaire s’il est détaché
-        em.remove(managedUser);
+        Server managedServer = em.merge(server);  // au cas où l'objet est détaché
+        em.remove(managedServer);
         em.getTransaction().commit();
         em.close();
     }
 }
+
