@@ -15,7 +15,7 @@ public class User {
     private String email;
 
     @Lob
-    private String password;
+    private byte[] password;
 
     @Column(name = "date_creation")
     @Temporal(TemporalType.DATE)
@@ -37,11 +37,11 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
+    public byte[] getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(byte[] password) {
         this.password = password;
     }
 

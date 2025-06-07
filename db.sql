@@ -58,3 +58,6 @@ CREATE TABLE "emettre" (
                            FOREIGN KEY (id_message) REFERENCES "Message"(id_message),
                            FOREIGN KEY (id_user) REFERENCES "User"(id_user)
 );
+
+CREATE USER discord_user WITH PASSWORD 'discord_password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO discord_user;

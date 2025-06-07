@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "integrer")
-@IdClass(Integrer.class)
+@IdClass(IntegrerId.class)
 public class Integrer {
     @Id
     @ManyToOne

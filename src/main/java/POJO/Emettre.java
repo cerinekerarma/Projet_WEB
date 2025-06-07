@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "emettre")
-@IdClass(Emettre.class)
+@IdClass(EmettreId.class)
 public class Emettre {
     @Id
     @ManyToOne

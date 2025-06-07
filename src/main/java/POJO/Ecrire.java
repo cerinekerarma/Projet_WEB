@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "ecrire")
+@IdClass(EcrireId.class)
 public class Ecrire {
     @Id
     @OneToOne

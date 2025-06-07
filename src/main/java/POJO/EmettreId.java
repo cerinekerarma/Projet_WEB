@@ -7,7 +7,11 @@ public class EmettreId implements Serializable {
     private Integer message;
     private Integer user;
 
-    public EmettreId() {
+    public EmettreId() {}
+
+    public EmettreId(Integer message, Integer user) {
+        this.message = message;
+        this.user = user;
     }
 
     public Integer getMessage() {
