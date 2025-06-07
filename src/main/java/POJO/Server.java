@@ -16,8 +16,6 @@ public class Server {
     @JoinColumn(name = "id_admin", referencedColumnName = "id_user")
     private User admin;
 
-    // Getters/Setters
-
     public Integer getId() {
         return id;
     }

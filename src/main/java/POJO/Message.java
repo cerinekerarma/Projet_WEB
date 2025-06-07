@@ -18,8 +18,6 @@ public class Message {
     @Temporal(TemporalType.DATE)
     private Date sendDate;
 
-    // Getters/Setters
-
     public Integer getId() {
         return id;
     }

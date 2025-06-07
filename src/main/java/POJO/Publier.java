@@ -18,8 +18,6 @@ public class Publier {
     @JoinColumn(name = "id_user", referencedColumnName = "id_user")
     private User user;
 
-    // Getters/Setters
-
     public Message getMessage() {
         return message;
     }
