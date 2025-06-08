@@ -4,20 +4,42 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "publier")
-@IdClass(PublierId.class)
 public class Publier {
     @Id
     @OneToOne
-    @JoinColumn(name = "id_message", referencedColumnName = "id_message")
+    @JoinColumn(
+            name = "id_message",
+            referencedColumnName = "id_message",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_publier_message")
+    )
     private Message message;
 
-    @ManyToOne
-    @JoinColumn(name = "id_server", referencedColumnName = "id_server")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id_server",
+            referencedColumnName = "id_server",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_publier_server")
+    )
     private Server server;
 
-    @ManyToOne
-    @JoinColumn(name = "id_user", referencedColumnName = "id_user")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id_user",
+            referencedColumnName = "id_user",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_publier_user")
+    )
     private User user;
+
+    public Publier() {}
+
+    public Publier(Message message, Server server, User user) {
+        this.message = message;
+        this.server = server;
+        this.user = user;
+    }
 
     public Message getMessage() {
         return message;

@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class IntegrerId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Integer user;
     private Integer server;
 
-    public IntegrerId() {
-    }
+    public IntegrerId() {}
 
     public IntegrerId(Integer userId, Integer serverId) {
         this.user = userId;
@@ -33,9 +34,11 @@ public class IntegrerId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IntegrerId that = (IntegrerId) o;
-        return Objects.equals(user, that.user) && Objects.equals(server, that.server);
+        return Objects.equals(user, that.user) &&
+                Objects.equals(server, that.server);
     }
 
     @Override

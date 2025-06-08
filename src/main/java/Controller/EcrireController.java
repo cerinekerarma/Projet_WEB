@@ -2,7 +2,6 @@ package Controller;
 
 import DAO.EcrireDAO;
 import POJO.Ecrire;
-import POJO.EcrireId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 

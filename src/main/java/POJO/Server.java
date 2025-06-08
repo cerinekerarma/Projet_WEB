@@ -3,40 +3,39 @@ package POJO;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Server")
+@Table(name = "\"Server\"")
 public class Server {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_server")
+    @Column(name = "id_server", nullable = false, updatable = false)
     private Integer id;
 
+    @Column(nullable = false, length = 255)
     private String nom;
 
-    @ManyToOne
-    @JoinColumn(name = "id_admin", referencedColumnName = "id_user")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id_admin",
+            referencedColumnName = "id_user",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_server_admin")
+    )
     private User admin;
 
-    public Integer getId() {
-        return id;
-    }
+    public Server() {}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
+    public Server(String nom, User admin) {
         this.nom = nom;
-    }
-
-    public User getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(User admin) {
         this.admin = admin;
     }
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+
+    public User getAdmin() { return admin; }
+    public void setAdmin(User admin) { this.admin = admin; }
 }

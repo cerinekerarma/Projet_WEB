@@ -4,35 +4,25 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class EmettreId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Integer message;
     private Integer user;
 
+    // Constructeurs
     public EmettreId() {}
 
-    public EmettreId(Integer message, Integer user) {
-        this.message = message;
-        this.user = user;
+    public EmettreId(Integer messageId, Integer userId) {
+        this.message = messageId;
+        this.user = userId;
     }
 
-    public EmettreId(int idMessage) {
-        this.message = idMessage;
-    }
+    // Getters/Setters
+    public Integer getMessage() { return message; }
+    public void setMessage(Integer message) { this.message = message; }
 
-    public Integer getMessage() {
-        return message;
-    }
-
-    public void setMessage(Integer message) {
-        this.message = message;
-    }
-
-    public Integer getUser() {
-        return user;
-    }
-
-    public void setUser(Integer user) {
-        this.user = user;
-    }
+    public Integer getUser() { return user; }
+    public void setUser(Integer user) { this.user = user; }
 
     @Override
     public boolean equals(Object o) {

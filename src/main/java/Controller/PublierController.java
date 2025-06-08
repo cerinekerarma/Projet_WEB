@@ -2,8 +2,6 @@ package Controller;
 
 import DAO.PublierDAO;
 import POJO.Publier;
-import POJO.PublierId;
-import POJO.Message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;

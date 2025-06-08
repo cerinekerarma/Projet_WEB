@@ -3,45 +3,59 @@ package POJO;
 
 import jakarta.persistence.*;
 
+import java.util.Date;
+
 @Entity
 @Table(name = "emettre")
 @IdClass(EmettreId.class)
 public class Emettre {
+
     @Id
-    @ManyToOne
-    @JoinColumn(name = "id_message", referencedColumnName = "id_message")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id_message",
+            referencedColumnName = "id_message",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_emettre_message")
+    )
     private Message message;
 
     @Id
-    @ManyToOne
-    @JoinColumn(name = "id_user", referencedColumnName = "id_user")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id_user",
+            referencedColumnName = "id_user",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_emettre_user")
+    )
     private User user;
 
-    private String reaction;
+    @Column(nullable = false, length = 50)
+    private String reaction;  // Ex: "like", "love", "haha"...
 
-    // Getters/Setters
+    @Column(name = "reaction_date", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date reactionDate = new Date();
 
-    public Message getMessage() {
-        return message;
-    }
+    // Constructeurs
+    public Emettre() {}
 
-    public void setMessage(Message message) {
+    public Emettre(Message message, User user, String reaction) {
         this.message = message;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
         this.user = user;
-    }
-
-    public String getReaction() {
-        return reaction;
-    }
-
-    public void setReaction(String reaction) {
         this.reaction = reaction;
     }
+
+    // Getters/Setters
+    public Message getMessage() { return message; }
+    public void setMessage(Message message) { this.message = message; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getReaction() { return reaction; }
+    public void setReaction(String reaction) { this.reaction = reaction; }
+
+    public Date getReactionDate() { return reactionDate; }
+    public void setReactionDate(Date reactionDate) { this.reactionDate = reactionDate; }
 }
