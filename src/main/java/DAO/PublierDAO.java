@@ -4,48 +4,69 @@ import POJO.Publier;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-
 import java.util.List;
 
 public class PublierDAO {
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
+    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
     public void create(Publier publier) {
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        em.persist(publier);
-        em.getTransaction().commit();
-        em.close();
+        executeInTransaction(em -> em.persist(publier));
     }
 
     public Publier findById(int id) {
-        EntityManager em = emf.createEntityManager();
-        Publier publier = em.find(Publier.class, id);
-        em.close();
-        return publier;
+        return execute(em -> em.find(Publier.class, id));
     }
 
     public List<Publier> findAll() {
-        EntityManager em = emf.createEntityManager();
-        List<Publier> list = em.createQuery("SELECT p FROM Publier p", Publier.class).getResultList();
-        em.close();
-        return list;
+        return execute(em ->
+                em.createQuery("SELECT p FROM Publier p", Publier.class).getResultList()
+        );
     }
 
     public void update(Publier publier) {
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        em.merge(publier);
-        em.getTransaction().commit();
-        em.close();
+        executeInTransaction(em -> em.merge(publier));
     }
 
     public void delete(Publier publier) {
+        executeInTransaction(em -> {
+            Publier managedPublier = em.merge(publier);
+            em.remove(managedPublier);
+        });
+    }
+
+    // ===== Méthodes utilitaires =====
+    private <T> T execute(DAOOperation<T> operation) {
         EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        Publier managedPublier = em.merge(publier);
-        em.remove(managedPublier);
-        em.getTransaction().commit();
-        em.close();
+        try {
+            return operation.execute(em);
+        } finally {
+            em.close();
+        }
+    }
+
+    private void executeInTransaction(DAOOperationVoid operation) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            operation.execute(em);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("DAO operation failed", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    @FunctionalInterface
+    private interface DAOOperation<T> {
+        T execute(EntityManager em);
+    }
+
+    @FunctionalInterface
+    private interface DAOOperationVoid {
+        void execute(EntityManager em);
     }
 }

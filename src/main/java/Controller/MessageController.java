@@ -1,8 +1,12 @@
 package Controller;
 
-import DAO.MessageDAO;
 import POJO.Message;
+import POJO.User;
+import DAO.MessageDAO;
+import DAO.UserDAO; // pour récupérer l'auteur lors de la création ou update
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,122 +15,165 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
-@WebServlet(name = "MessageController", urlPatterns = {"/messages/*"})
+@WebServlet(name = "MessageController", urlPatterns = {"/api/messages"})
 public class MessageController extends HttpServlet {
 
-    private MessageDAO messageDAO = new MessageDAO();
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private MessageDAO messageDAO;
+    private UserDAO userDAO;
+    private ObjectMapper objectMapper;
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        messageDAO = new MessageDAO();
+        userDAO = new UserDAO();
+        objectMapper = new ObjectMapper();
+        // Config pour Date en ISO8601 si besoin
+        objectMapper.findAndRegisterModules();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    // GET /api/messages         -> liste tous les messages
+    // GET /api/messages?id=1    -> message id=1
+    // GET /api/messages?channelId=2  -> messages du canal 2
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo(); // / or /{id}
+        resp.setContentType("application/json;charset=UTF-8");
 
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        String idParam = req.getParameter("id");
+        String channelIdParam = req.getParameter("channelId");
 
-        if (pathInfo == null || pathInfo.equals("/")) {
-            // Récupérer tous les messages
-            List<Message> messages = messageDAO.findAll();
-            objectMapper.writeValue(resp.getWriter(), messages);
-        } else {
-            // Récupérer message par id
-            String idStr = pathInfo.substring(1);
-            try {
-                int id = Integer.parseInt(idStr);
+        try {
+            if (idParam != null) {
+                int id = Integer.parseInt(idParam);
                 Message message = messageDAO.findById(id);
-                if (message != null) {
-                    objectMapper.writeValue(resp.getWriter(), message);
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write("{\"error\":\"Message not found\"}");
+                if (message == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
+                    return;
                 }
-            } catch (NumberFormatException e) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Invalid message ID\"}");
+                resp.getWriter().write(objectMapper.writeValueAsString(message));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } else if (channelIdParam != null) {
+                int channelId = Integer.parseInt(channelIdParam);
+                List<Message> messages = messageDAO.findByChannelId(channelId);
+                resp.getWriter().write(objectMapper.writeValueAsString(messages));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } else {
+                List<Message> messages = messageDAO.findAll();
+                resp.getWriter().write(objectMapper.writeValueAsString(messages));
+                resp.setStatus(HttpServletResponse.SC_OK);
             }
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid ID parameter");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error: " + e.getMessage());
         }
     }
 
+    // POST /api/messages
+    // Corps JSON: { "contenu": "...", "sendDate": "...", "auteur": { "id": ... } }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         try {
-            Message newMessage = objectMapper.readValue(req.getReader(), Message.class);
-            messageDAO.create(newMessage);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getWriter(), newMessage);
-        } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
-        }
-    }
+            Message message = objectMapper.readValue(req.getInputStream(), Message.class);
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Message ID missing\"}");
-            return;
-        }
-
-        String idStr = pathInfo.substring(1);
-        try {
-            int id = Integer.parseInt(idStr);
-            Message existing = messageDAO.findById(id);
-            if (existing == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Message not found\"}");
+            // Vérifier que l'auteur existe bien
+            if (message.getAuteur() == null || message.getAuteur().getId() == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author ID is required");
                 return;
             }
-            Message updatedMessage = objectMapper.readValue(req.getReader(), Message.class);
-            updatedMessage.setId(id);  // s'assurer que l'id correspond
-            messageDAO.update(updatedMessage);
-            objectMapper.writeValue(resp.getWriter(), updatedMessage);
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid message ID\"}");
+            User auteur = userDAO.findById(message.getAuteur().getId());
+            if (auteur == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author not found");
+                return;
+            }
+            message.setAuteur(auteur);
+
+            // Si pas de date, on met la date actuelle
+            if (message.getSendDate() == null) {
+                message.setSendDate(new Date());
+            }
+
+            messageDAO.create(message);
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(objectMapper.writeValueAsString(message));
         } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message data: " + e.getMessage());
         }
     }
 
+    // PUT /api/messages?id=1
+    // Corps JSON avec champs à modifier (ex: contenu)
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Message ID missing\"}");
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
             return;
         }
 
-        String idStr = pathInfo.substring(1);
         try {
-            int id = Integer.parseInt(idStr);
+            int id = Integer.parseInt(idParam);
+            Message existingMessage = messageDAO.findById(id);
+            if (existingMessage == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
+                return;
+            }
+
+            Message updatedMessage = objectMapper.readValue(req.getInputStream(), Message.class);
+
+            // Mise à jour des champs (exemple)
+            if (updatedMessage.getContenu() != null) {
+                existingMessage.setContenu(updatedMessage.getContenu());
+            }
+            if (updatedMessage.getSendDate() != null) {
+                existingMessage.setSendDate(updatedMessage.getSendDate());
+            }
+            // Mise à jour auteur si fourni
+            if (updatedMessage.getAuteur() != null && updatedMessage.getAuteur().getId() != null) {
+                User auteur = userDAO.findById(updatedMessage.getAuteur().getId());
+                if (auteur == null) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author not found");
+                    return;
+                }
+                existingMessage.setAuteur(auteur);
+            }
+
+            messageDAO.update(existingMessage);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(objectMapper.writeValueAsString(existingMessage));
+
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message ID");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message data: " + e.getMessage());
+        }
+    }
+
+    // DELETE /api/messages?id=1
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(idParam);
             Message message = messageDAO.findById(id);
             if (message == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Message not found\"}");
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
                 return;
             }
             messageDAO.delete(message);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid message ID\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message ID");
         }
     }
 }

@@ -1,10 +1,12 @@
 package Controller;
 
-import DAO.EmettreDAO;
 import POJO.Emettre;
-import POJO.EmettreId;
+import POJO.Message;
+import POJO.User;
+import DAO.EmettreDAO;
+import DAO.MessageDAO;
+import DAO.UserDAO;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,132 +14,189 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "EmettreController", urlPatterns = {"/emettre"})
+@WebServlet(name = "EmettreController", urlPatterns = {"/api/emettre"})
 public class EmettreController extends HttpServlet {
 
-    private final EmettreDAO emettreDAO = new EmettreDAO();
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    private EmettreId extractEmettreId(HttpServletRequest req) throws NumberFormatException {
-        String idMessageStr = req.getParameter("id_message");
-        if (idMessageStr == null) {
-            return null;
-        }
-        int idMessage = Integer.parseInt(idMessageStr);
-        return new EmettreId(idMessage);
-    }
+    private EmettreDAO emettreDAO;
+    private UserDAO userDAO;
+    private MessageDAO messageDAO;
+    private ObjectMapper objectMapper;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+    public void init() throws ServletException {
+        super.init();
+        emettreDAO = new EmettreDAO();
+        userDAO = new UserDAO();
+        messageDAO = new MessageDAO();
+        objectMapper = new ObjectMapper();
+    }
 
-        if (req.getParameter("id_message") == null) {
-            List<Emettre> emettrres = emettreDAO.findAll();
-            mapper.writeValue(resp.getWriter(), emettrres);
+    // GET /api/emettre
+    // GET /api/emettre?userId=1&messageId=2
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String userIdParam = req.getParameter("userId");
+        String messageIdParam = req.getParameter("messageId");
+
+        if (userIdParam == null && messageIdParam == null) {
+            // Liste tous les Emettre
+            List<Emettre> allEmettre = emettreDAO.findAll();
+            resp.getWriter().write(objectMapper.writeValueAsString(allEmettre));
+            resp.setStatus(HttpServletResponse.SC_OK);
+        } else if (userIdParam != null && messageIdParam != null) {
+            try {
+                int userId = Integer.parseInt(userIdParam);
+                int messageId = Integer.parseInt(messageIdParam);
+
+                User user = userDAO.findById(userId);
+                Message message = messageDAO.findById(messageId);
+
+                if (user == null || message == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User or Message not found");
+                    return;
+                }
+
+                Emettre emettre = emettreDAO.findById(messageId, userId);
+                if (emettre == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Emettre not found");
+                    return;
+                }
+                resp.getWriter().write(objectMapper.writeValueAsString(emettre));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or messageId");
+            }
+        } else if (userIdParam != null) {
+            try {
+                int userId = Integer.parseInt(userIdParam);
+                List<Emettre> list = emettreDAO.findByUserId(userId);
+                resp.getWriter().write(objectMapper.writeValueAsString(list));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId");
+            }
+        } else {
+            try {
+                int messageId = Integer.parseInt(messageIdParam);
+                List<Emettre> list = emettreDAO.findByMessageId(messageId);
+                resp.getWriter().write(objectMapper.writeValueAsString(list));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid messageId");
+            }
+        }
+    }
+
+    // POST /api/emettre
+    // Corps JSON : { "user": { "id": 1 }, "message": { "id": 2 }, "reaction": "like" }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            Emettre emettre = objectMapper.readValue(req.getInputStream(), Emettre.class);
+
+            if (emettre.getUser() == null || emettre.getMessage() == null || emettre.getReaction() == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "User, Message and Reaction must be provided");
+                return;
+            }
+
+            User user = userDAO.findById(emettre.getUser().getId());
+            Message message = messageDAO.findById(emettre.getMessage().getId());
+
+            if (user == null || message == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "User or Message not found");
+                return;
+            }
+
+            emettre.setUser(user);
+            emettre.setMessage(message);
+
+            // Initialisation automatique de reactionDate à la création
+            if (emettre.getReactionDate() == null) {
+                emettre.setReactionDate(new java.util.Date());
+            }
+
+            emettreDAO.create(emettre);
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(objectMapper.writeValueAsString(emettre));
+
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Emettre data: " + e.getMessage());
+        }
+    }
+
+    // PUT /api/emettre?userId=1&messageId=2
+    // Corps JSON : { "reaction": "love", "reactionDate": "2024-06-09T12:00:00" }
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userIdParam = req.getParameter("userId");
+        String messageIdParam = req.getParameter("messageId");
+
+        if (userIdParam == null || messageIdParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "userId and messageId are required");
             return;
         }
 
         try {
-            EmettreId id = extractEmettreId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
+            int userId = Integer.parseInt(userIdParam);
+            int messageId = Integer.parseInt(messageIdParam);
+
+            Emettre existingEmettre = emettreDAO.findById(messageId, userId);
+            if (existingEmettre == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Emettre not found");
                 return;
             }
-            Emettre emettre = emettreDAO.findById(id.getMessage());
-            if (emettre != null) {
-                mapper.writeValue(resp.getWriter(), emettre);
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Emettre not found\"}");
+
+            Emettre updatedEmettre = objectMapper.readValue(req.getInputStream(), Emettre.class);
+
+            // Met à jour les champs modifiables
+            if (updatedEmettre.getReaction() != null) {
+                existingEmettre.setReaction(updatedEmettre.getReaction());
             }
+            if (updatedEmettre.getReactionDate() != null) {
+                existingEmettre.setReactionDate(updatedEmettre.getReactionDate());
+            }
+
+            emettreDAO.update(existingEmettre);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(objectMapper.writeValueAsString(existingEmettre));
+
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or messageId");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Emettre data: " + e.getMessage());
         }
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        try (BufferedReader reader = req.getReader()) {
-            Emettre newEmettre = mapper.readValue(reader, Emettre.class);
-            emettreDAO.create(newEmettre);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            mapper.writeValue(resp.getWriter(), newEmettre);
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
-        }
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        try {
-            EmettreId id = extractEmettreId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
-                return;
-            }
-
-            Emettre existing = emettreDAO.findById(id.getMessage());
-            if (existing == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Emettre not found\"}");
-                return;
-            }
-
-            try (BufferedReader reader = req.getReader()) {
-                Emettre updatedEmettre = mapper.readValue(reader, Emettre.class);
-                updatedEmettre.setMessage(existing.getMessage()); // ou autre champ clé
-                emettreDAO.update(updatedEmettre);
-                mapper.writeValue(resp.getWriter(), updatedEmettre);
-            }
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
-        }
-    }
-
+    // DELETE /api/emettre?userId=1&messageId=2
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        String userIdParam = req.getParameter("userId");
+        String messageIdParam = req.getParameter("messageId");
+
+        if (userIdParam == null || messageIdParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "userId and messageId are required");
+            return;
+        }
 
         try {
-            EmettreId id = extractEmettreId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
-                return;
-            }
+            int userId = Integer.parseInt(userIdParam);
+            int messageId = Integer.parseInt(messageIdParam);
 
-            Emettre emettre = emettreDAO.findById(id.getMessage());
+            Emettre emettre = emettreDAO.findById(messageId, userId);
             if (emettre == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Emettre not found\"}");
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Emettre not found");
                 return;
             }
 
             emettreDAO.delete(emettre);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or messageId");
         }
     }
 }

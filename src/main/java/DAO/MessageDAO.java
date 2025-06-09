@@ -4,58 +4,77 @@ import POJO.Message;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-
 import java.util.List;
 
 public class MessageDAO {
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
+    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
 
     public void create(Message message) {
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        em.persist(message);
-        em.getTransaction().commit();
-        em.close();
+        executeInTransaction(em -> em.persist(message));
     }
 
     public Message findById(int id) {
-        EntityManager em = emf.createEntityManager();
-        Message message = em.find(Message.class, id);
-        em.close();
-        return message;
+        return execute(em -> em.find(Message.class, id));
     }
 
     public List<Message> findAll() {
-        EntityManager em = emf.createEntityManager();
-        List<Message> messages = em.createQuery("SELECT m FROM Message m", Message.class).getResultList();
-        em.close();
-        return messages;
+        return execute(em ->
+                em.createQuery("SELECT m FROM Message m", Message.class).getResultList()
+        );
     }
 
     public void update(Message message) {
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        em.merge(message);
-        em.getTransaction().commit();
-        em.close();
+        executeInTransaction(em -> em.merge(message));
     }
 
     public void delete(Message message) {
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
-        Message managedMessage = em.merge(message); // Si détaché
-        em.remove(managedMessage);
-        em.getTransaction().commit();
-        em.close();
+        executeInTransaction(em -> {
+            Message managedMessage = em.merge(message); // En cas d'entité détachée
+            em.remove(managedMessage);
+        });
     }
 
-    public List<Message> findByServerId(int channelId) {
+    public List<Message> findByChannelId(int channelId) {
+        return execute(em ->
+                em.createQuery("SELECT m FROM Message m WHERE m.channel.id = :channelId", Message.class)
+                        .setParameter("channelId", channelId)
+                        .getResultList()
+        );
+    }
+
+    // ===== Méthodes utilitaires =====
+    private <T> T execute(DAOOperation<T> operation) {
         EntityManager em = emf.createEntityManager();
-        List<Message> messages = em.createQuery(
-                        "SELECT m FROM Message m WHERE m.id = :channelId", Message.class)
-                .setParameter("channelId", channelId)
-                .getResultList();
-        em.close();
-        return messages;
+        try {
+            return operation.execute(em);
+        } finally {
+            em.close();
+        }
+    }
+
+    private void executeInTransaction(DAOOperationVoid operation) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            operation.execute(em);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("DAO operation failed", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    @FunctionalInterface
+    private interface DAOOperation<T> {
+        T execute(EntityManager em);
+    }
+
+    @FunctionalInterface
+    private interface DAOOperationVoid {
+        void execute(EntityManager em);
     }
 }

@@ -1,10 +1,16 @@
 package Controller;
 
-import DAO.PublierDAO;
 import POJO.Publier;
+import POJO.Message;
+import POJO.Server;
+import POJO.User;
+
+import DAO.PublierDAO;
+import DAO.MessageDAO;
+import DAO.ServerDAO;
+import DAO.UserDAO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,132 +18,174 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "PublierController", urlPatterns = {"/publier"})
+@WebServlet(name = "PublierController", urlPatterns = {"/api/publier"})
 public class PublierController extends HttpServlet {
 
-    private final PublierDAO publierDAO = new PublierDAO();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private PublierDAO publierDAO;
+    private MessageDAO messageDAO;
+    private ServerDAO serverDAO;
+    private UserDAO userDAO;
+    private ObjectMapper objectMapper;
 
-    /**
-     * Extrait l'ID du message depuis les paramètres HTTP.
-     */
-    private PublierId extractId(HttpServletRequest req) throws NumberFormatException {
-        String messageIdStr = req.getParameter("message");
-        if (messageIdStr == null) return null;
-
-        Integer messageId = Integer.parseInt(messageIdStr);
-        return new PublierId(messageId);
+    @Override
+    public void init() throws ServletException {
+        publierDAO = new PublierDAO();
+        messageDAO = new MessageDAO();
+        serverDAO = new ServerDAO();
+        userDAO = new UserDAO();
+        objectMapper = new ObjectMapper();
     }
 
+    // GET /api/publier?id=xxx -> Publier par id_message (clé primaire)
+    // GET /api/publier         -> liste tous les publier
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json;charset=UTF-8");
+        String idMessageParam = req.getParameter("id");
 
-        PublierId id = extractId(req);
-        if (id == null) {
-            // Pas d'ID donné, on retourne tout
-            List<Publier> publies = publierDAO.findAll();
-            mapper.writeValue(resp.getWriter(), publies);
-            return;
-        }
-
-        Publier publier = publierDAO.findById(id.getMessage());
-        if (publier != null) {
-            mapper.writeValue(resp.getWriter(), publier);
+        if (idMessageParam != null) {
+            try {
+                int idMessage = Integer.parseInt(idMessageParam);
+                // On récupère via Message car id de Publier = id_message (clé primaire)
+                Message message = messageDAO.findById(idMessage);
+                if (message == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
+                    return;
+                }
+                Publier publier = publierDAO.findById(idMessage);
+                if (publier == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Publier not found");
+                    return;
+                }
+                resp.getWriter().write(objectMapper.writeValueAsString(publier));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id parameter");
+            }
         } else {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.getWriter().write("{\"error\":\"Publier not found\"}");
+            List<Publier> publierList = publierDAO.findAll();
+            resp.getWriter().write(objectMapper.writeValueAsString(publierList));
+            resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
+    // POST /api/publier
+    // JSON attendu : { "message": {"id": ...}, "server": {"id": ...}, "user": {"id": ...} }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        try {
+            Publier publier = objectMapper.readValue(req.getInputStream(), Publier.class);
 
-        try (BufferedReader reader = req.getReader()) {
-            Publier newPublier = mapper.readValue(reader, Publier.class);
-            publierDAO.create(newPublier);
+            if (publier.getMessage() == null || publier.getMessage().getId() == null
+                    || publier.getServer() == null || publier.getServer().getId() == null
+                    || publier.getUser() == null || publier.getUser().getId() == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message, Server, and User IDs are required");
+                return;
+            }
+
+            Message message = messageDAO.findById(publier.getMessage().getId());
+            Server server = serverDAO.findById(publier.getServer().getId());
+            User user = userDAO.findById(publier.getUser().getId());
+
+            if (message == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message not found");
+                return;
+            }
+            if (server == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Server not found");
+                return;
+            }
+            if (user == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "User not found");
+                return;
+            }
+
+            publier.setMessage(message);
+            publier.setServer(server);
+            publier.setUser(user);
+
+            publierDAO.create(publier);
+
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            mapper.writeValue(resp.getWriter(), newPublier);
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
+            resp.getWriter().write(objectMapper.writeValueAsString(publier));
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Publier data: " + e.getMessage());
         }
     }
 
+    // PUT /api/publier?id=xxx
+    // JSON avec champs à modifier (server et/ou user). Message ne peut pas être modifié (clé PK)
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
+            return;
+        }
 
-        PublierId id;
         try {
-            id = extractId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing message parameter\"}");
+            int idMessage = Integer.parseInt(idParam);
+            Publier existingPublier = publierDAO.findById(idMessage);
+            if (existingPublier == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Publier not found");
                 return;
             }
+
+            Publier updatedPublier = objectMapper.readValue(req.getInputStream(), Publier.class);
+
+            if (updatedPublier.getServer() != null && updatedPublier.getServer().getId() != null) {
+                Server newServer = serverDAO.findById(updatedPublier.getServer().getId());
+                if (newServer == null) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Server not found");
+                    return;
+                }
+                existingPublier.setServer(newServer);
+            }
+
+            if (updatedPublier.getUser() != null && updatedPublier.getUser().getId() != null) {
+                User newUser = userDAO.findById(updatedPublier.getUser().getId());
+                if (newUser == null) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "User not found");
+                    return;
+                }
+                existingPublier.setUser(newUser);
+            }
+
+            // Le message ne peut pas être modifié (clé primaire)
+            publierDAO.update(existingPublier);
+
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(objectMapper.writeValueAsString(existingPublier));
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid message parameter\"}");
-            return;
-        }
-
-        Publier existing = publierDAO.findById(id.getMessage());
-        if (existing == null) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.getWriter().write("{\"error\":\"Publier not found\"}");
-            return;
-        }
-
-        try (BufferedReader reader = req.getReader()) {
-            Publier updatedPublier = mapper.readValue(reader, Publier.class);
-
-            // Assure cohérence de l'ID
-            updatedPublier.setMessage(existing.getMessage());
-
-            publierDAO.update(updatedPublier);
-            mapper.writeValue(resp.getWriter(), updatedPublier);
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id parameter");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Publier data: " + e.getMessage());
         }
     }
 
+    // DELETE /api/publier?id=xxx
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message ID is required");
+            return;
+        }
 
-        PublierId id;
         try {
-            id = extractId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing message parameter\"}");
+            int idMessage = Integer.parseInt(idParam);
+            Publier publier = publierDAO.findById(idMessage);
+            if (publier == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Publier not found");
                 return;
             }
+            publierDAO.delete(publier);
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid message parameter\"}");
-            return;
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id parameter");
         }
-
-        Publier publier = publierDAO.findById(id.getMessage());
-        if (publier == null) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.getWriter().write("{\"error\":\"Publier not found\"}");
-            return;
-        }
-
-        publierDAO.delete(publier);
-        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

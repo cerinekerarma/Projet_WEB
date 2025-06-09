@@ -1,9 +1,13 @@
 package Controller;
 
-import DAO.EcrireDAO;
 import POJO.Ecrire;
+import POJO.Message;
+import POJO.User;
+import DAO.EcrireDAO;
+import DAO.UserDAO;
+import DAO.MessageDAO;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,137 +15,211 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "EcrireController", urlPatterns = {"/ecrires"})
+@WebServlet(name = "EcrireController", urlPatterns = {"/api/ecrire"})
 public class EcrireController extends HttpServlet {
 
-    private final EcrireDAO ecrireDAO = new EcrireDAO();
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    // Récupère la clé EcrireId depuis un seul paramètre id_message
-    private EcrireId extractEcrireId(HttpServletRequest req) throws NumberFormatException {
-        String idMessageStr = req.getParameter("id_message");
-        if (idMessageStr == null) {
-            return null;
-        }
-        int idMessage = Integer.parseInt(idMessageStr);
-        return new EcrireId(idMessage);
-    }
+    private EcrireDAO ecrireDAO;
+    private UserDAO userDAO;
+    private MessageDAO messageDAO;
+    private ObjectMapper objectMapper;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+    public void init() throws ServletException {
+        super.init();
+        ecrireDAO = new EcrireDAO();
+        userDAO = new UserDAO();
+        messageDAO = new MessageDAO();
+        objectMapper = new ObjectMapper();
+    }
 
-        if (req.getParameter("id_message") == null) {
-            // Retourne la liste complète
-            List<Ecrire> ecrires = ecrireDAO.findAll();
-            mapper.writeValue(resp.getWriter(), ecrires);
+    // GET /api/ecrire                      -> liste tous les Ecrire
+    // GET /api/ecrire?messageId=1          -> ecrire spécifique par message
+    // GET /api/ecrire?senderId=1           -> messages envoyés par un utilisateur
+    // GET /api/ecrire?receiverId=1         -> messages reçus par un utilisateur
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+
+        String messageIdParam = req.getParameter("messageId");
+        String senderIdParam = req.getParameter("senderId");
+        String receiverIdParam = req.getParameter("receiverId");
+
+        if (messageIdParam == null && senderIdParam == null && receiverIdParam == null) {
+            // Lister tous
+            List<Ecrire> all = ecrireDAO.findAll();
+            resp.getWriter().write(objectMapper.writeValueAsString(all));
+            resp.setStatus(HttpServletResponse.SC_OK);
+
+        } else if (messageIdParam != null) {
+            // Chercher par messageId
+            try {
+                int messageId = Integer.parseInt(messageIdParam);
+                Message message = messageDAO.findById(messageId);
+                if (message == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
+                    return;
+                }
+                Ecrire ecrire = ecrireDAO.findByMessage(message);
+                if (ecrire == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Ecrire not found for this message");
+                    return;
+                }
+                resp.getWriter().write(objectMapper.writeValueAsString(ecrire));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid messageId");
+            }
+
+        } else if (senderIdParam != null) {
+            // Chercher par sender
+            try {
+                int senderId = Integer.parseInt(senderIdParam);
+                User sender = userDAO.findById(senderId);
+                if (sender == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Sender not found");
+                    return;
+                }
+                List<Ecrire> list = ecrireDAO.findBySender(sender);
+                resp.getWriter().write(objectMapper.writeValueAsString(list));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid senderId");
+            }
+
+        } else if (receiverIdParam != null) {
+            // Chercher par receiver
+            try {
+                int receiverId = Integer.parseInt(receiverIdParam);
+                User receiver = userDAO.findById(receiverId);
+                if (receiver == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Receiver not found");
+                    return;
+                }
+                List<Ecrire> list = ecrireDAO.findByReceiver(receiver);
+                resp.getWriter().write(objectMapper.writeValueAsString(list));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (NumberFormatException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid receiverId");
+            }
+        }
+    }
+
+    // POST /api/ecrire
+    // JSON: { "message": { "id": 1 }, "sender": { "id": 2 }, "receiver": { "id": 3 } }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            Ecrire ecrire = objectMapper.readValue(req.getInputStream(), Ecrire.class);
+
+            if (ecrire.getMessage() == null || ecrire.getSender() == null || ecrire.getReceiver() == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message, Sender and Receiver must be provided");
+                return;
+            }
+
+            Message message = messageDAO.findById(ecrire.getMessage().getId());
+            User sender = userDAO.findById(ecrire.getSender().getId());
+            User receiver = userDAO.findById(ecrire.getReceiver().getId());
+
+            if (message == null || sender == null || receiver == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message, Sender or Receiver not found");
+                return;
+            }
+
+            ecrire.setMessage(message);
+            ecrire.setSender(sender);
+            ecrire.setReceiver(receiver);
+
+            if (ecrire.getSendDate() == null) {
+                ecrire.setSendDate(new java.util.Date());
+            }
+
+            ecrireDAO.create(ecrire);
+
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(objectMapper.writeValueAsString(ecrire));
+
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Ecrire data: " + e.getMessage());
+        }
+    }
+
+    // PUT /api/ecrire?messageId=1
+    // JSON: { "sendDate": "2023-04-01T12:00:00" }
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String messageIdParam = req.getParameter("messageId");
+
+        if (messageIdParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "messageId is required");
             return;
         }
 
         try {
-            EcrireId id = extractEcrireId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
-                return;
-            }
-            Ecrire ecrire = ecrireDAO.findById(id.getMessage());
-            if (ecrire != null) {
-                mapper.writeValue(resp.getWriter(), ecrire);
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Ecrire not found\"}");
-            }
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
-        }
-    }
+            int messageId = Integer.parseInt(messageIdParam);
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        try (BufferedReader reader = req.getReader()) {
-            Ecrire newEcrire = mapper.readValue(reader, Ecrire.class);
-            ecrireDAO.create(newEcrire);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            mapper.writeValue(resp.getWriter(), newEcrire);
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
-        }
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        try {
-            EcrireId id = extractEcrireId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
+            Message message = messageDAO.findById(messageId);
+            if (message == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
                 return;
             }
 
-            Ecrire existing = ecrireDAO.findById(id.getMessage());
+            Ecrire existing = ecrireDAO.findByMessage(message);
             if (existing == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Ecrire not found\"}");
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Ecrire not found");
                 return;
             }
 
-            try (BufferedReader reader = req.getReader()) {
-                Ecrire updatedEcrire = mapper.readValue(reader, Ecrire.class);
+            Ecrire updated = objectMapper.readValue(req.getInputStream(), Ecrire.class);
 
-                // S'assurer que la clé reste cohérente
-                updatedEcrire.setMessage(existing.getMessage());
-
-                ecrireDAO.update(updatedEcrire);
-                mapper.writeValue(resp.getWriter(), updatedEcrire);
+            if (updated.getSendDate() != null) {
+                existing.setSendDate(updated.getSendDate());
             }
+            // Tu peux aussi autoriser la mise à jour d'autres champs si nécessaire
+
+            ecrireDAO.update(existing);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(objectMapper.writeValueAsString(existing));
+
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
-        } catch (MismatchedInputException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid messageId");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Ecrire data: " + e.getMessage());
         }
     }
 
+    // DELETE /api/ecrire?messageId=1
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
+        String messageIdParam = req.getParameter("messageId");
+
+        if (messageIdParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "messageId is required");
+            return;
+        }
 
         try {
-            EcrireId id = extractEcrireId(req);
-            if (id == null) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Missing id_message parameter\"}");
+            int messageId = Integer.parseInt(messageIdParam);
+
+            Message message = messageDAO.findById(messageId);
+            if (message == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
                 return;
             }
 
-            Ecrire ecrire = ecrireDAO.findById(id.getMessage());
+            Ecrire ecrire = ecrireDAO.findByMessage(message);
             if (ecrire == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Ecrire not found\"}");
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Ecrire not found");
                 return;
             }
 
             ecrireDAO.delete(ecrire);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid id_message parameter\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid messageId");
         }
     }
 }

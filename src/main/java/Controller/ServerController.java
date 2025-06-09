@@ -1,7 +1,10 @@
 package Controller;
 
-import DAO.ServerDAO;
 import POJO.Server;
+import POJO.User;
+import DAO.ServerDAO;
+import DAO.UserDAO;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
@@ -13,118 +16,143 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "ServerController", urlPatterns = {"/servers/*"})
+@WebServlet(name = "ServerController", urlPatterns = {"/api/servers"})
 public class ServerController extends HttpServlet {
 
-    private ServerDAO serverDAO = new ServerDAO();
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ServerDAO serverDAO;
+    private UserDAO userDAO;
+    private ObjectMapper objectMapper;
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        serverDAO = new ServerDAO();
+        userDAO = new UserDAO();
+        objectMapper = new ObjectMapper();
+    }
+
+    // GET /api/servers           -> liste tous les serveurs
+    // GET /api/servers?id=1      -> serveur id=1
+    // GET /api/servers?adminId=2 -> serveurs gérés par admin id=2
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo(); // / or /{id}
+        resp.setContentType("application/json;charset=UTF-8");
+        String idParam = req.getParameter("id");
+        String adminIdParam = req.getParameter("adminId");
 
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            List<Server> servers = serverDAO.findAll();
-            objectMapper.writeValue(resp.getWriter(), servers);
-        } else {
-            String idStr = pathInfo.substring(1);
-            try {
-                int id = Integer.parseInt(idStr);
+        try {
+            if (idParam != null) {
+                int id = Integer.parseInt(idParam);
                 Server server = serverDAO.findById(id);
-                if (server != null) {
-                    objectMapper.writeValue(resp.getWriter(), server);
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write("{\"error\":\"Server not found\"}");
+                if (server == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Server not found");
+                    return;
                 }
-            } catch (NumberFormatException e) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().write("{\"error\":\"Invalid server ID\"}");
+                resp.getWriter().write(objectMapper.writeValueAsString(server));
+            } else if (adminIdParam != null) {
+                int adminId = Integer.parseInt(adminIdParam);
+                List<Server> servers = serverDAO.findByAdminId(adminId);
+                resp.getWriter().write(objectMapper.writeValueAsString(servers));
+            } else {
+                List<Server> servers = serverDAO.findAll();
+                resp.getWriter().write(objectMapper.writeValueAsString(servers));
             }
+            resp.setStatus(HttpServletResponse.SC_OK);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameter");
         }
     }
 
+    // POST /api/servers
+    // JSON attendu : { "nom": "...", "admin": { "id": 1 } }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
         try {
-            Server newServer = objectMapper.readValue(req.getReader(), Server.class);
-            serverDAO.create(newServer);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getWriter(), newServer);
-        } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
-        }
-    }
+            Server server = objectMapper.readValue(req.getInputStream(), Server.class);
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Server ID missing\"}");
-            return;
-        }
-
-        String idStr = pathInfo.substring(1);
-        try {
-            int id = Integer.parseInt(idStr);
-            Server existing = serverDAO.findById(id);
-            if (existing == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Server not found\"}");
+            // Vérifier que l'admin existe
+            if (server.getAdmin() == null || server.getAdmin().getId() == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Admin ID is required");
                 return;
             }
-            Server updatedServer = objectMapper.readValue(req.getReader(), Server.class);
-            updatedServer.setId(id);
-            serverDAO.update(updatedServer);
-            objectMapper.writeValue(resp.getWriter(), updatedServer);
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid server ID\"}");
+            User admin = userDAO.findById(server.getAdmin().getId());
+            if (admin == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Admin user not found");
+                return;
+            }
+
+            server.setAdmin(admin);
+            serverDAO.create(server);
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(objectMapper.writeValueAsString(server));
         } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Malformed JSON\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid server data: " + e.getMessage());
         }
     }
 
+    // PUT /api/servers?id=1
+    // JSON avec champs à modifier, ex: { "nom": "Nouveau nom", "admin": {"id": 2} }
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Server ID missing\"}");
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Server ID is required");
             return;
         }
 
-        String idStr = pathInfo.substring(1);
         try {
-            int id = Integer.parseInt(idStr);
+            int id = Integer.parseInt(idParam);
+            Server existingServer = serverDAO.findById(id);
+            if (existingServer == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Server not found");
+                return;
+            }
+
+            Server updatedServer = objectMapper.readValue(req.getInputStream(), Server.class);
+
+            if (updatedServer.getNom() != null) {
+                existingServer.setNom(updatedServer.getNom());
+            }
+
+            if (updatedServer.getAdmin() != null && updatedServer.getAdmin().getId() != null) {
+                User newAdmin = userDAO.findById(updatedServer.getAdmin().getId());
+                if (newAdmin == null) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "New admin user not found");
+                    return;
+                }
+                existingServer.setAdmin(newAdmin);
+            }
+
+            serverDAO.update(existingServer);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(objectMapper.writeValueAsString(existingServer));
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid server ID");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid server data: " + e.getMessage());
+        }
+    }
+
+    // DELETE /api/servers?id=1
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String idParam = req.getParameter("id");
+        if (idParam == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Server ID is required");
+            return;
+        }
+
+        try {
+            int id = Integer.parseInt(idParam);
             Server server = serverDAO.findById(id);
             if (server == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Server not found\"}");
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Server not found");
                 return;
             }
             serverDAO.delete(server);
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"error\":\"Invalid server ID\"}");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid server ID");
         }
     }
 }
