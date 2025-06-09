@@ -1,71 +1,94 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" import="java.util.List, POJO.Message, POJO.User" %>
-<%@ page import="DAO.MessageDAO" %>
-<%
-    // Récupération des paramètres
-    Integer channelId = null;
-    try {
-        channelId = Integer.parseInt(request.getParameter("channelId"));
-    } catch (Exception e) {}
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-    if (channelId == null) {
-        channelId = 1; // canal par défaut
-    }
-
-    // Récupérer la liste des messages depuis ta DAO (à adapter)
-    // Ici on suppose que tu as une classe MessageDAO avec méthode findByChannelId
-    MessageDAO messageDAO = new MessageDAO();
-    List<Message> messages = messageDAO.findByServerId(channelId);
-
-    // Récupérer l'utilisateur connecté (simulé ici, à remplacer par la session réelle)
-    User currentUser = (User) session.getAttribute("user");
-    if (currentUser == null) {
-        response.sendRedirect("login.jsp");
-        return;
-    }
-
-    String error = (String) request.getAttribute("error");
-%>
-<!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <title>Canal #<%= channelId %> - Messagerie</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        .message { border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .author { font-weight: bold; }
-        .text { margin: 5px 0; }
-        .like-button { cursor: pointer; color: #0066cc; background: none; border: none; }
-        form { margin-top: 20px; }
-        textarea { width: 100%; height: 70px; }
-        .error { color: red; font-weight: bold; }
-    </style>
+    <title>Client Messagerie</title>
+    <script>
+        function loadMessagesChannel() {
+            let channelId = document.getElementById("channelSelect").value;
+            fetch(`/api/messages?channelId=${channelId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let messagesDiv = document.getElementById("messages");
+                    messagesDiv.innerHTML = "";
+                    data.forEach(msg => {
+                        messagesDiv.innerHTML += `
+                    <div>
+                        <strong>${msg.auteur.username}</strong>: ${msg.contenu}
+                        <em>${new Date(msg.sendDate).toLocaleString()}</em>
+                        <button onclick="reactMessage(${msg.id}, 'like')">👍</button>
+                    </div>`;
+                    });
+                });
+        }
+
+
+        function sendMessage() {
+            let channelId = document.getElementById("channelSelect").value;
+            let content = document.getElementById("messageInput").value;
+            let senderId = document.getElementById("senderId").value;
+
+            let message = {
+                content: content,
+                sender: { id: parseInt(senderId) },
+                channel: { id: parseInt(channelId) }
+            };
+
+            fetch('/api/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(message)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        loadMessagesChannel();
+                        document.getElementById("messageInput").value = "";
+                    } else {
+                        alert("Erreur lors de l'envoi du message");
+                    }
+                });
+        }
+    </script>
 </head>
 <body>
-<h2>Canal #<%= channelId %></h2>
+<h1>Messagerie</h1>
 
-<% if (error != null) { %>
-<p class="error"><%= error %></p>
-<% } %>
+<label for="channelSelect">Choisir un canal :</label>
+<select id="channelSelect" onchange="loadMessagesChannel()">
+    <option value="1">Canal 1</option>
+    <option value="2">Canal 2</option>
+    <!-- Remplir dynamiquement avec JSP ou via fetch -->
+</select>
 
-<div>
-    <% for (Message m : messages) { %>
-    <div class="message">
-        <span class="author"><%= m.getUser().getName() %></span> :
-        <span class="text"><%= m.getText() %></span>
-        <form method="get" action="messageAction.jsp" style="display:inline;">
-            <input type="hidden" name="messageId" value="<%= m.getId() %>"/>
-            <input type="hidden" name="action" value="like"/>
-            <button class="like-button" type="submit">👍 <%= m.getLikesCount() %></button>
-        </form>
-    </div>
-    <% } %>
+<div id="messages" style="border:1px solid #ccc; height:300px; overflow:auto; margin-top:10px; padding:5px;">
+    <!-- Messages chargés ici -->
 </div>
 
-<form method="post" action="sendMessage">
-    <input type="hidden" name="channelId" value="<%= channelId %>" />
-    <textarea name="messageText" placeholder="Écrire un message..." required></textarea><br />
-    <button type="submit">Envoyer</button>
-</form>
+<br/>
+
+<input type="hidden" id="senderId" value="1" /> <!-- Id de l'utilisateur connecté -->
+
+<input type="text" id="messageInput" placeholder="Votre message" style="width:80%;" />
+<button onclick="sendMessage()">Envoyer</button>
+
+<button onclick="reactMessage(messageId, 'like')">👍</button>
+
+<script>
+    function reactMessage(messageId, reaction) {
+        fetch('/api/message/react', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: messageId, reaction: reaction })
+        }).then(response => {
+            if (response.ok) {
+                alert('Réaction enregistrée');
+            } else {
+                alert('Erreur');
+            }
+        });
+    }
+</script>
+
 </body>
 </html>

@@ -61,3 +61,47 @@ CREATE TABLE "emettre" (
 
 CREATE USER discord_user WITH PASSWORD 'discord_password';
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO discord_user;
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+       -- Utilisateurs
+INSERT INTO "User" (email, password, date_creation) VALUES
+                                                        ('alice@example.com', digest('passwordalice', 'sha256'), CURRENT_DATE),
+                                                        ('bob@example.com', digest('passwordbob', 'sha256'), CURRENT_DATE),
+                                                        ('charlie@example.com', digest('passwordcharlie', 'sha256'), CURRENT_DATE);
+
+-- Serveurs
+INSERT INTO "Server" (nom, id_admin) VALUES
+                                         ('Serveur Général', 1),
+                                         ('Serveur Projet', 2);
+
+-- Intégrations utilisateurs dans serveurs
+INSERT INTO "integrer" (id_user, id_server) VALUES
+                                                (1, 1),
+                                                (2, 1),
+                                                (3, 2);
+
+-- Messages
+INSERT INTO "Message" (contenu, date_envoie) VALUES
+                                                 ('Bonjour tout le monde !', CURRENT_DATE),
+                                                 ('Comment avance le projet ?', CURRENT_DATE),
+                                                 ('On se retrouve à 15h ?', CURRENT_DATE);
+
+-- Publier messages dans serveurs (message_id, server_id, user_id)
+INSERT INTO "publier" (id_message, id_server, id_user) VALUES
+                                                           (1, 1, 1),
+                                                           (2, 1, 2),
+                                                           (3, 2, 3);
+
+-- Messages privés (discussion directe)
+INSERT INTO "ecrire" (id_message, id_user1, id_user2) VALUES
+                                                          (2, 2, 1), -- Bob écrit à Alice
+                                                          (3, 3, 2); -- Charlie écrit à Bob
+
+-- Réactions
+INSERT INTO "emettre" (id_message, id_user, reaction) VALUES
+                                                          (1, 2, 'like'),
+                                                          (1, 3, 'love'),
+                                                          (2, 1, 'haha');
+
+ALTER TABLE "Message" ALTER COLUMN contenu TYPE TEXT;

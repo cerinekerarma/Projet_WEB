@@ -12,8 +12,7 @@ public class Message {
     @Column(name = "id_message", nullable = false, updatable = false)
     private Integer id;
 
-    @Column(nullable = false, length = 2000)
-    @Lob
+    @Column(length=2000)
     private String contenu;
 
     @Column(name = "date_envoie", nullable = false)
