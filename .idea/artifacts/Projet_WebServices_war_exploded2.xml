@@ -1,0 +1,33 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="Projet_WebServices:war exploded2">
+    <output-path>$PROJECT_DIR$/out/artifacts/Projet_WebServices_war_exploded2</output-path>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="Projet_WebServices" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="Maven: org.hibernate.orm:hibernate-core:7.0.0.Beta1" />
+          <element id="library" level="project" name="Maven: jakarta.persistence:jakarta.persistence-api:3.2.0-M2" />
+          <element id="library" level="project" name="Maven: jakarta.transaction:jakarta.transaction-api:2.0.1" />
+          <element id="library" level="project" name="Maven: org.jboss.logging:jboss-logging:3.5.0.Final" />
+          <element id="library" level="project" name="Maven: org.hibernate.models:hibernate-models:0.8.6" />
+          <element id="library" level="project" name="Maven: io.smallrye:jandex:3.2.0" />
+          <element id="library" level="project" name="Maven: com.fasterxml:classmate:1.5.1" />
+          <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy:1.14.18" />
+          <element id="library" level="project" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:4.0.0" />
+          <element id="library" level="project" name="Maven: jakarta.activation:jakarta.activation-api:2.1.0" />
+          <element id="library" level="project" name="Maven: jakarta.inject:jakarta.inject-api:2.0.1" />
+          <element id="library" level="project" name="Maven: org.antlr:antlr4-runtime:4.13.0" />
+          <element id="library" level="project" name="Maven: org.glassfish.jaxb:jaxb-runtime:4.0.5" />
+          <element id="library" level="project" name="Maven: org.glassfish.jaxb:jaxb-core:4.0.5" />
+          <element id="library" level="project" name="Maven: org.eclipse.angus:angus-activation:2.0.2" />
+          <element id="library" level="project" name="Maven: org.glassfish.jaxb:txw2:4.0.5" />
+          <element id="library" level="project" name="Maven: com.sun.istack:istack-commons-runtime:4.1.2" />
+          <element id="library" level="project" name="lib" />
+        </element>
+      </element>
+      <element id="javaee-facet-resources" facet="Projet_WebServices/web/Web" />
+    </root>
+  </artifact>
+</component>

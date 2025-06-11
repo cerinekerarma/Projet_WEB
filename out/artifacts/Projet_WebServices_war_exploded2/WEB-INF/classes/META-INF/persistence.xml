@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd"
+             version="3.2">
+    <persistence-unit name="PU_JPA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>POJO.Ecrire</class>
+        <class>POJO.EcrireId</class>
+        <class>POJO.Emettre</class>
+        <class>POJO.EmettreId</class>
+        <class>POJO.Integrer</class>
+        <class>POJO.IntegrerId</class>
+        <class>POJO.Message</class>
+        <class>POJO.Publier</class>
+        <class>POJO.PublierId</class>
+        <class>POJO.Server</class>
+        <class>POJO.User</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/UsersDB"/>
+            <property name="jakarta.persistence.jdbc.user" value="discord_user"/>
+            <property name="jakarta.persistence.jdbc.password" value="discord_password"/>
+
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+        </properties>
+    </persistence-unit>
+</persistence>

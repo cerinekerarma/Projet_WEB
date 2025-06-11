@@ -132,10 +132,6 @@ public class EcrireController extends HttpServlet {
             ecrire.setSender(sender);
             ecrire.setReceiver(receiver);
 
-            if (ecrire.getSendDate() == null) {
-                ecrire.setSendDate(new java.util.Date());
-            }
-
             ecrireDAO.create(ecrire);
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
@@ -172,11 +168,6 @@ public class EcrireController extends HttpServlet {
                 return;
             }
 
-            Ecrire updated = objectMapper.readValue(req.getInputStream(), Ecrire.class);
-
-            if (updated.getSendDate() != null) {
-                existing.setSendDate(updated.getSendDate());
-            }
             // Tu peux aussi autoriser la mise à jour d'autres champs si nécessaire
 
             ecrireDAO.update(existing);

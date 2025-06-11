@@ -33,10 +33,6 @@ public class Emettre {
     @Column(nullable = false, length = 50)
     private String reaction;  // Ex: "like", "love", "haha"...
 
-    @Column(name = "reaction_date", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date reactionDate = new Date();
-
     // Constructeurs
     public Emettre() {}
 
@@ -55,7 +51,4 @@ public class Emettre {
 
     public String getReaction() { return reaction; }
     public void setReaction(String reaction) { this.reaction = reaction; }
-
-    public Date getReactionDate() { return reactionDate; }
-    public void setReactionDate(Date reactionDate) { this.reactionDate = reactionDate; }
 }

@@ -15,7 +15,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Lob
     @Column(nullable = false)
     private byte[] password;
 

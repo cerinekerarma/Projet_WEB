@@ -81,18 +81,6 @@ public class MessageController extends HttpServlet {
         try {
             Message message = objectMapper.readValue(req.getInputStream(), Message.class);
 
-            // Vérifier que l'auteur existe bien
-            if (message.getAuteur() == null || message.getAuteur().getId() == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author ID is required");
-                return;
-            }
-            User auteur = userDAO.findById(message.getAuteur().getId());
-            if (auteur == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author not found");
-                return;
-            }
-            message.setAuteur(auteur);
-
             // Si pas de date, on met la date actuelle
             if (message.getSendDate() == null) {
                 message.setSendDate(new Date());
@@ -132,15 +120,6 @@ public class MessageController extends HttpServlet {
             }
             if (updatedMessage.getSendDate() != null) {
                 existingMessage.setSendDate(updatedMessage.getSendDate());
-            }
-            // Mise à jour auteur si fourni
-            if (updatedMessage.getAuteur() != null && updatedMessage.getAuteur().getId() != null) {
-                User auteur = userDAO.findById(updatedMessage.getAuteur().getId());
-                if (auteur == null) {
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Author not found");
-                    return;
-                }
-                existingMessage.setAuteur(auteur);
             }
 
             messageDAO.update(existingMessage);

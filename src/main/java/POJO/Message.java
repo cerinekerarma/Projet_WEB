@@ -16,19 +16,14 @@ public class Message {
     private String contenu;
 
     @Column(name = "date_envoie", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.DATE)
     private Date sendDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_user", nullable = false)
-    private User auteur;
 
     public Message() {}
 
     public Message(String contenu, Date sendDate, User auteur) {
         this.contenu = contenu;
         this.sendDate = sendDate;
-        this.auteur = auteur;
     }
 
     public Integer getId() { return id; }
@@ -39,7 +34,4 @@ public class Message {
 
     public Date getSendDate() { return sendDate; }
     public void setSendDate(Date sendDate) { this.sendDate = sendDate; }
-
-    public User getAuteur() { return auteur; }
-    public void setAuteur(User auteur) { this.auteur = auteur; }
 }

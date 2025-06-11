@@ -115,13 +115,6 @@ public class IntegrerController extends HttpServlet {
                 return;
             }
 
-            // Initialiser la dateJoined
-            integrer.setUser(user);
-            integrer.setServer(server);
-            if (integrer.getDateJoined() == null) {
-                integrer.setDateJoined(new java.util.Date());
-            }
-
             integrerDAO.create(integrer);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(objectMapper.writeValueAsString(integrer));
@@ -151,13 +144,6 @@ public class IntegrerController extends HttpServlet {
             if (existingIntegrer == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Integrer not found");
                 return;
-            }
-
-            Integrer updatedIntegrer = objectMapper.readValue(req.getInputStream(), Integrer.class);
-
-            // On met à jour les champs modifiables (ex: dateJoined)
-            if (updatedIntegrer.getDateJoined() != null) {
-                existingIntegrer.setDateJoined(updatedIntegrer.getDateJoined());
             }
 
             integrerDAO.update(existingIntegrer);

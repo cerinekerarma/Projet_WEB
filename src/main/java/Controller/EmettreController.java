@@ -114,11 +114,6 @@ public class EmettreController extends HttpServlet {
             emettre.setUser(user);
             emettre.setMessage(message);
 
-            // Initialisation automatique de reactionDate à la création
-            if (emettre.getReactionDate() == null) {
-                emettre.setReactionDate(new java.util.Date());
-            }
-
             emettreDAO.create(emettre);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(objectMapper.writeValueAsString(emettre));
@@ -155,9 +150,6 @@ public class EmettreController extends HttpServlet {
             // Met à jour les champs modifiables
             if (updatedEmettre.getReaction() != null) {
                 existingEmettre.setReaction(updatedEmettre.getReaction());
-            }
-            if (updatedEmettre.getReactionDate() != null) {
-                existingEmettre.setReactionDate(updatedEmettre.getReactionDate());
             }
 
             emettreDAO.update(existingEmettre);

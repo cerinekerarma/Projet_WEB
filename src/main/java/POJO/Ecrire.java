@@ -35,10 +35,6 @@ public class Ecrire {
     )
     private User receiver;
 
-    @Column(name = "date_envoi", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date sendDate = new Date();
-
     public Ecrire() {}
 
     public Ecrire(Message message, User sender, User receiver) {
@@ -55,7 +51,4 @@ public class Ecrire {
 
     public User getReceiver() { return receiver; }
     public void setReceiver(User receiver) { this.receiver = receiver; }
-
-    public Date getSendDate() { return sendDate; }
-    public void setSendDate(Date sendDate) { this.sendDate = sendDate; }
 }

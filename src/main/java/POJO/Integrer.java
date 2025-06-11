@@ -28,17 +28,12 @@ public class Integrer {
     )
     private Server server;
 
-    @Column(name = "date_joined", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dateJoined;  // Nouveau champ utile
-
     // Constructeurs
     public Integrer() {}
 
     public Integrer(User user, Server server) {
         this.user = user;
         this.server = server;
-        this.dateJoined = new Date();
     }
 
     // Getters/Setters
@@ -47,7 +42,4 @@ public class Integrer {
 
     public Server getServer() { return server; }
     public void setServer(Server server) { this.server = server; }
-
-    public Date getDateJoined() { return dateJoined; }
-    public void setDateJoined(Date dateJoined) { this.dateJoined = dateJoined; }
 }
