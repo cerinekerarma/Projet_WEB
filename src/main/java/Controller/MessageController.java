@@ -39,13 +39,13 @@ public class MessageController extends HttpServlet {
 
     // GET /api/messages         -> liste tous les messages
     // GET /api/messages?id=1    -> message id=1
-    // GET /api/messages?channelId=2  -> messages du canal 2
+    // GET /api/messages?serverId=2  -> messages du canal 2
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
 
         String idParam = req.getParameter("id");
-        String channelIdParam = req.getParameter("channelId");
+        String serverIdParam = req.getParameter("serverId");
 
         try {
             if (idParam != null) {
@@ -57,9 +57,9 @@ public class MessageController extends HttpServlet {
                 }
                 resp.getWriter().write(objectMapper.writeValueAsString(message));
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } else if (channelIdParam != null) {
-                int channelId = Integer.parseInt(channelIdParam);
-                List<Message> messages = messageDAO.findByChannelId(channelId);
+            } else if (serverIdParam != null) {
+                int serverId = Integer.parseInt(serverIdParam);
+                List<Message> messages = messageDAO.findByServerId(serverId);
                 resp.getWriter().write(objectMapper.writeValueAsString(messages));
                 resp.setStatus(HttpServletResponse.SC_OK);
             } else {

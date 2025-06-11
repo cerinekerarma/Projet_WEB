@@ -34,10 +34,15 @@ public class MessageDAO {
         });
     }
 
-    public List<Message> findByChannelId(int channelId) {
+    public List<Message> findByServerId(int serverId) {
         return execute(em ->
-                em.createQuery("SELECT m FROM Message m WHERE m.channel.id = :channelId", Message.class)
-                        .setParameter("channelId", channelId)
+                em.createNativeQuery("""
+        SELECT m.id_message, m.contenu, m.date_envoie
+        FROM "Message" m
+        JOIN publier p ON m.id_message = p.id_message
+        WHERE p.id_server = ?
+    """, Message.class)
+                        .setParameter(1, serverId)
                         .getResultList()
         );
     }
