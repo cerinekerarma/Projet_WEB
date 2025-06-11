@@ -7,14 +7,12 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <class>POJO.Ecrire</class>
-        <class>POJO.EcrireId</class>
         <class>POJO.Emettre</class>
         <class>POJO.EmettreId</class>
         <class>POJO.Integrer</class>
         <class>POJO.IntegrerId</class>
         <class>POJO.Message</class>
         <class>POJO.Publier</class>
-        <class>POJO.PublierId</class>
         <class>POJO.Server</class>
         <class>POJO.User</class>
 

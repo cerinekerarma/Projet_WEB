@@ -75,20 +75,50 @@ public class MessageController extends HttpServlet {
     }
 
     // POST /api/messages
-    // Corps JSON: { "contenu": "...", "sendDate": "...", "auteur": { "id": ... } }
+    // Corps JSON: { "contenu": "...", "sendDate": "...", "auteur": { "id": ... }, "senderId:" "...", "recieverId": "..."}
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            // Mapper le JSON vers un objet Message partiel
             Message message = objectMapper.readValue(req.getInputStream(), Message.class);
 
-            // Si pas de date, on met la date actuelle
+            // Extraire manuellement auteur, serverId, receiverId via un JsonNode ou un DTO plus complet
+            var jsonNode = objectMapper.readTree(req.getInputStream());
+
+            Integer auteurId = null;
+            Integer serverId = null;
+            Integer receiverId = null;
+
+            if (jsonNode.has("auteur") && jsonNode.get("auteur").has("id")) {
+                auteurId = jsonNode.get("auteur").get("id").asInt();
+            }
+            if (jsonNode.has("serverId")) {
+                serverId = jsonNode.get("serverId").asInt();
+            }
+            if (jsonNode.has("receiverId")) {
+                receiverId = jsonNode.get("receiverId").asInt();
+            }
+
             if (message.getSendDate() == null) {
                 message.setSendDate(new Date());
             }
 
+            // Créer le message
             messageDAO.create(message);
+
+            // Créer la relation Publier si serveur et auteur sont fournis
+            if (auteurId != null && serverId != null) {
+                messageDAO.insertIntoPublier(message.getId(), serverId, auteurId);
+            }
+
+            // Créer la relation Ecrire si sender et receiver sont fournis
+            if (auteurId != null && receiverId != null) {
+                messageDAO.insertIntoEcrire(message.getId(), auteurId, receiverId);
+            }
+
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(objectMapper.writeValueAsString(message));
+
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message data: " + e.getMessage());
         }

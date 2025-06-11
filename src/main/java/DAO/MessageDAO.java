@@ -1,6 +1,6 @@
 package DAO;
 
-import POJO.Message;
+import POJO.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -45,6 +45,38 @@ public class MessageDAO {
                         .setParameter(1, serverId)
                         .getResultList()
         );
+    }
+
+    public void insertIntoPublier(int messageId, int serverId, int userId) {
+        execute(em -> {
+            Message message = em.find(Message.class, messageId);
+            Server server = em.find(Server.class, serverId);
+            User user = em.find(User.class, userId);
+
+            Publier publier = new Publier();
+            publier.setMessage(message);
+            publier.setServer(server);
+            publier.setUser(user);
+
+            em.persist(publier);
+            return null;
+        });
+    }
+
+    public void insertIntoEcrire(int messageId, int senderId, int receiverId) {
+        execute(em -> {
+            Message message = em.find(Message.class, messageId);
+            User sender = em.find(User.class, senderId);
+            User receiver = em.find(User.class, receiverId);
+
+            Ecrire ecrire = new Ecrire();
+            ecrire.setMessage(message);
+            ecrire.setSender(sender);     // ou setUser1
+            ecrire.setReceiver(receiver); // ou setUser2
+
+            em.persist(ecrire);
+            return null;
+        });
     }
 
     // ===== Méthodes utilitaires =====
