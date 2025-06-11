@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -73,52 +74,47 @@ public class MessageController extends HttpServlet {
     }
 
     // POST /api/messages
-    // Corps JSON: { "contenu": "...", "sendDate": "...", "auteur": { "id": ... }, "senderId:" "...", "recieverId": "..."}
+    // Corps JSON (message privé) : { "contenu": "...", "sendDate": "...", "sender": { "id": ... }, "receiver": { "id": ... } }
+    // Corps JSON (message serveur) : { "contenu": "...", "sendDate": "...", "auteur": { "id": ... }, "serverId": ... }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            // Mapper le JSON vers un objet Message partiel
-            Message message = objectMapper.readValue(req.getInputStream(), Message.class);
-
-            // Extraire manuellement auteur, serverId, receiverId via un JsonNode ou un DTO plus complet
             var jsonNode = objectMapper.readTree(req.getInputStream());
 
-            Integer auteurId = null;
-            Integer serverId = null;
-            Integer receiverId = null;
+            Message message = new Message();
+            message.setContenu(jsonNode.get("contenu").asText());
 
-            if (jsonNode.has("auteur") && jsonNode.get("auteur").has("id")) {
-                auteurId = jsonNode.get("auteur").get("id").asInt();
-            }
-            if (jsonNode.has("serverId")) {
-                serverId = jsonNode.get("serverId").asInt();
-            }
-            if (jsonNode.has("receiverId")) {
-                receiverId = jsonNode.get("receiverId").asInt();
-            }
-
-            if (message.getSendDate() == null) {
+            // Parsing de la date si présente, sinon date actuelle
+            if (jsonNode.has("sendDate")) {
+                String dateStr = jsonNode.get("sendDate").asText();
+                Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+                message.setSendDate(date);
+            } else {
                 message.setSendDate(new Date());
             }
 
-            // Créer le message
             messageDAO.create(message);
 
-            // Créer la relation Publier si serveur et auteur sont fournis
-            if (auteurId != null && serverId != null) {
+            if (jsonNode.has("serverId") && jsonNode.has("auteur")) {
+                Integer serverId = jsonNode.get("serverId").asInt();
+                Integer auteurId = jsonNode.get("auteur").get("id").asInt();
                 messageDAO.insertIntoPublier(message.getId(), serverId, auteurId);
-            }
-
-            // Créer la relation Ecrire si sender et receiver sont fournis
-            if (auteurId != null && receiverId != null) {
-                messageDAO.insertIntoEcrire(message.getId(), auteurId, receiverId);
+            } else if (jsonNode.has("sender") && jsonNode.has("receiver")) {
+                Integer senderId = jsonNode.get("sender").get("id").asInt();
+                Integer receiverId = jsonNode.get("receiver").get("id").asInt();
+                messageDAO.insertIntoEcrire(message.getId(), senderId, receiverId);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("Champs JSON insuffisants pour déterminer le type de message.");
+                return;
             }
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().write(objectMapper.writeValueAsString(message));
+            resp.getWriter().write("Message créé avec succès.");
 
         } catch (Exception e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid message data: " + e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("Erreur lors de la création du message : " + e.getMessage());
         }
     }
 
