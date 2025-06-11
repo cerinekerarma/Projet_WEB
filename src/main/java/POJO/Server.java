@@ -17,7 +17,7 @@ public class Server {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "id_admin",
-            referencedColumnName = "id_user",
+            referencedColumnName = "login",
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_server_admin")
     )

@@ -50,7 +50,7 @@ public class IntegrerController extends HttpServlet {
         } else if (userIdParam != null && serverIdParam != null) {
             // Trouver un Integrer par clé composite
             try {
-                int userId = Integer.parseInt(userIdParam);
+                String userId = userIdParam;
                 int serverId = Integer.parseInt(serverIdParam);
 
                 // On crée un Integrer temporaire avec User et Server chargés
@@ -137,7 +137,7 @@ public class IntegrerController extends HttpServlet {
         }
 
         try {
-            int userId = Integer.parseInt(userIdParam);
+            String userId = userIdParam;
             int serverId = Integer.parseInt(serverIdParam);
 
             Integrer existingIntegrer = integrerDAO.findById(userId, serverId);
@@ -169,7 +169,7 @@ public class IntegrerController extends HttpServlet {
         }
 
         try {
-            int userId = Integer.parseInt(userIdParam);
+            String userId = userIdParam;
             int serverId = Integer.parseInt(serverIdParam);
 
             Integrer integrer = integrerDAO.findById(userId, serverId);

@@ -8,9 +8,8 @@ import java.util.Date;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_user", nullable = false, updatable = false)
-    private Integer id;
+    @Column(name = "login", nullable = false, length = 255, updatable = false)
+    private String login;
 
     @Column(nullable = false, unique = true, length = 255)
     private String email;
@@ -24,21 +23,44 @@ public class User {
 
     public User() {}
 
-    public User(String email, byte[] password, Date creationDate) {
+    public User(String login, String email, byte[] password, Date creationDate) {
+        this.login = login;
         this.email = email;
         this.password = password;
         this.creationDate = creationDate;
     }
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    // Getters and Setters
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getId() {
+        return login;
+    }
 
-    public byte[] getPassword() { return password; }
-    public void setPassword(byte[] password) { this.password = password; }
+    public void setId(String login) {
+        this.login = login;
+    }
 
-    public Date getCreationDate() { return creationDate; }
-    public void setDateCreation(Date creationDate) { this.creationDate = creationDate; }
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public byte[] getPassword() {
+        return password;
+    }
+
+    public void setPassword(byte[] password) {
+        this.password = password;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setDateCreation(Date creationDate) {
+        this.creationDate = creationDate;
+    }
 }

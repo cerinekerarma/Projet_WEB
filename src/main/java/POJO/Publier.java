@@ -27,7 +27,7 @@ public class Publier {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "id_user",
-            referencedColumnName = "id_user",
+            referencedColumnName = "login",
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_publier_user")
     )

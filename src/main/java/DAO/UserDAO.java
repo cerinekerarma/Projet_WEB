@@ -21,8 +21,9 @@ public class UserDAO {
         executeInTransaction(em -> em.persist(user));
     }
 
-    public User findById(int id) {
-        return execute(em -> em.find(User.class, id));
+    // Remplacé int par String pour le login
+    public User findById(String login) {
+        return execute(em -> em.find(User.class, login));
     }
 
     public List<User> findAll() {
