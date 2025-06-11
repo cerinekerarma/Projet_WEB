@@ -9,7 +9,7 @@ import java.util.Date;
 public class Integrer {
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_user",
             referencedColumnName = "login",
@@ -19,7 +19,7 @@ public class Integrer {
     private User user;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_server",
             referencedColumnName = "id_server",

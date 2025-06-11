@@ -14,7 +14,7 @@ public class Server {
     @Column(nullable = false, length = 255)
     private String nom;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_admin",
             referencedColumnName = "login",

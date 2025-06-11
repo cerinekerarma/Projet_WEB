@@ -11,7 +11,7 @@ import java.util.Date;
 public class Emettre {
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_message",
             referencedColumnName = "id_message",
@@ -21,7 +21,7 @@ public class Emettre {
     private Message message;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_user",
             referencedColumnName = "login",

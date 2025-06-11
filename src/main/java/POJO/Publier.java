@@ -15,7 +15,7 @@ public class Publier {
     )
     private Message message;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_server",
             referencedColumnName = "id_server",
@@ -24,7 +24,7 @@ public class Publier {
     )
     private Server server;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_user",
             referencedColumnName = "login",

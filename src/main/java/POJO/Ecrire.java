@@ -17,7 +17,7 @@ public class Ecrire {
     )
     private Message message;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_user1",
             referencedColumnName = "login",
@@ -26,7 +26,7 @@ public class Ecrire {
     )
     private User sender;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(
             name = "id_user2",
             referencedColumnName = "login",
