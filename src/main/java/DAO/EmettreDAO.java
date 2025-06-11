@@ -19,7 +19,7 @@ public class EmettreDAO {
         return execute(em -> em.find(Emettre.class, id));
     }
 
-    public Emettre findById(int messageId, int userId) {
+    public Emettre findById(int messageId, String userId) {
         return execute(em -> {
             EmettreId id = new EmettreId(messageId, userId);
             return em.find(Emettre.class, id);
@@ -33,7 +33,7 @@ public class EmettreDAO {
         );
     }
 
-    public List<Emettre> findByUserId(int userId) {
+    public List<Emettre> findByUserId(String userId) {
         return execute(em ->
                 em.createQuery("SELECT e FROM Emettre e WHERE e.user.id = :userId", Emettre.class)
                         .setParameter("userId", userId)

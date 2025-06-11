@@ -20,7 +20,7 @@ public class Ecrire {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "id_user1",
-            referencedColumnName = "id_user",
+            referencedColumnName = "login",
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_ecrire_sender")
     )
@@ -29,7 +29,7 @@ public class Ecrire {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "id_user2",
-            referencedColumnName = "id_user",
+            referencedColumnName = "login",
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_ecrire_receiver")
     )

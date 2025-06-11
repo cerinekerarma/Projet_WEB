@@ -7,12 +7,12 @@ public class EmettreId implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer message;
-    private Integer user;
+    private String user;
 
     // Constructeurs
     public EmettreId() {}
 
-    public EmettreId(Integer messageId, Integer userId) {
+    public EmettreId(Integer messageId, String userId) {
         this.message = messageId;
         this.user = userId;
     }
@@ -21,8 +21,8 @@ public class EmettreId implements Serializable {
     public Integer getMessage() { return message; }
     public void setMessage(Integer message) { this.message = message; }
 
-    public Integer getUser() { return user; }
-    public void setUser(Integer user) { this.user = user; }
+    public String getUser() { return user; }
+    public void setUser(String user) { this.user = user; }
 
     @Override
     public boolean equals(Object o) {

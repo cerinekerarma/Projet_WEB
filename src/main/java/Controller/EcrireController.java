@@ -76,7 +76,7 @@ public class EcrireController extends HttpServlet {
         } else if (senderIdParam != null) {
             // Chercher par sender
             try {
-                int senderId = Integer.parseInt(senderIdParam);
+                String senderId = senderIdParam;
                 User sender = userDAO.findById(senderId);
                 if (sender == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Sender not found");
@@ -92,7 +92,7 @@ public class EcrireController extends HttpServlet {
         } else if (receiverIdParam != null) {
             // Chercher par receiver
             try {
-                int receiverId = Integer.parseInt(receiverIdParam);
+                String receiverId = receiverIdParam;
                 User receiver = userDAO.findById(receiverId);
                 if (receiver == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Receiver not found");

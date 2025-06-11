@@ -6,21 +6,21 @@ import java.util.Objects;
 public class IntegrerId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Integer user;
+    private String user;
     private Integer server;
 
     public IntegrerId() {}
 
-    public IntegrerId(Integer userId, Integer serverId) {
+    public IntegrerId(String userId, Integer serverId) {
         this.user = userId;
         this.server = serverId;
     }
 
-    public Integer getUser() {
+    public String getUser() {
         return user;
     }
 
-    public void setUser(Integer user) {
+    public void setUser(String user) {
         this.user = user;
     }
 

@@ -49,7 +49,7 @@ public class EmettreController extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
         } else if (userIdParam != null && messageIdParam != null) {
             try {
-                int userId = Integer.parseInt(userIdParam);
+                String userId = userIdParam;
                 int messageId = Integer.parseInt(messageIdParam);
 
                 User user = userDAO.findById(userId);
@@ -72,7 +72,7 @@ public class EmettreController extends HttpServlet {
             }
         } else if (userIdParam != null) {
             try {
-                int userId = Integer.parseInt(userIdParam);
+                String userId = userIdParam;
                 List<Emettre> list = emettreDAO.findByUserId(userId);
                 resp.getWriter().write(objectMapper.writeValueAsString(list));
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -136,7 +136,7 @@ public class EmettreController extends HttpServlet {
         }
 
         try {
-            int userId = Integer.parseInt(userIdParam);
+            String userId = userIdParam;
             int messageId = Integer.parseInt(messageIdParam);
 
             Emettre existingEmettre = emettreDAO.findById(messageId, userId);
@@ -175,7 +175,7 @@ public class EmettreController extends HttpServlet {
         }
 
         try {
-            int userId = Integer.parseInt(userIdParam);
+            String userId = userIdParam;
             int messageId = Integer.parseInt(messageIdParam);
 
             Emettre emettre = emettreDAO.findById(messageId, userId);

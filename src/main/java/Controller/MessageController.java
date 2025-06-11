@@ -22,14 +22,12 @@ import java.util.List;
 public class MessageController extends HttpServlet {
 
     private MessageDAO messageDAO;
-    private UserDAO userDAO;
     private ObjectMapper objectMapper;
 
     @Override
     public void init() throws ServletException {
         super.init();
         messageDAO = new MessageDAO();
-        userDAO = new UserDAO();
         objectMapper = new ObjectMapper();
         // Config pour Date en ISO8601 si besoin
         objectMapper.findAndRegisterModules();

@@ -19,7 +19,7 @@ public class IntegrerDAO {
         return execute(em -> em.find(Integrer.class, id));
     }
 
-    public Integrer findById(int userId, int serverId) {
+    public Integrer findById(String userId, int serverId) {
         IntegrerId id = new IntegrerId(userId, serverId);
         return execute(em -> em.find(Integrer.class, id));
     }

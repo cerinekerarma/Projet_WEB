@@ -41,7 +41,7 @@ public class UserController extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
         } else {
             try {
-                int id = Integer.parseInt(idParam);
+                String id = idParam;
                 User user = userDAO.findById(id);
                 if (user == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
@@ -84,7 +84,7 @@ public class UserController extends HttpServlet {
         }
 
         try {
-            int id = Integer.parseInt(idParam);
+            String id = idParam;
             User existingUser = userDAO.findById(id);
             if (existingUser == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
@@ -119,7 +119,7 @@ public class UserController extends HttpServlet {
         }
 
         try {
-            int id = Integer.parseInt(idParam);
+            String id = idParam;
             User user = userDAO.findById(id);
             if (user == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
