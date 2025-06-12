@@ -1,20 +1,18 @@
 package Client.Controller;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
 
-@WebServlet("/LogoutController")
+@WebServlet("/logout")
 public class LogoutController extends HttpServlet {
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession(false);
         if (session != null) {
-            session.invalidate(); // Supprime la session
+            session.invalidate(); // Détruit la session
         }
-        res.sendRedirect("login.jsp?message=Déconnecté avec succès");
+        resp.sendRedirect("login.jsp"); // Redirige vers la page de login
     }
 }

@@ -39,17 +39,17 @@ public class PublierController extends HttpServlet {
         objectMapper = new ObjectMapper();
     }
 
-    // GET /api/publier?id=xxx -> Publier par id_message (clé primaire)
-    // GET /api/publier         -> liste tous les publier
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        String idMessageParam = req.getParameter("id");
 
-        if (idMessageParam != null) {
-            try {
+        String idMessageParam = req.getParameter("id");
+        String serverIdParam = req.getParameter("serverId");
+
+        try {
+            if (idMessageParam != null) {
+                // GET /api/publier?id=xxx
                 int idMessage = Integer.parseInt(idMessageParam);
-                // On récupère via Message car id de Publier = id_message (clé primaire)
                 Message message = messageDAO.findById(idMessage);
                 if (message == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
@@ -62,15 +62,26 @@ public class PublierController extends HttpServlet {
                 }
                 resp.getWriter().write(objectMapper.writeValueAsString(publier));
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid id parameter");
+
+            } else if (serverIdParam != null) {
+                // ✅ GET /api/publier?serverId=xxx
+                int serverId = Integer.parseInt(serverIdParam);
+                List<Publier> publierList = publierDAO.findByServerId(serverId);
+                resp.getWriter().write(objectMapper.writeValueAsString(publierList));
+                resp.setStatus(HttpServletResponse.SC_OK);
+
+            } else {
+                // GET /api/publier → liste tous les publier
+                List<Publier> publierList = publierDAO.findAll();
+                resp.getWriter().write(objectMapper.writeValueAsString(publierList));
+                resp.setStatus(HttpServletResponse.SC_OK);
             }
-        } else {
-            List<Publier> publierList = publierDAO.findAll();
-            resp.getWriter().write(objectMapper.writeValueAsString(publierList));
-            resp.setStatus(HttpServletResponse.SC_OK);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid numeric parameter");
         }
     }
+
+
 
     // POST /api/publier
     // JSON attendu : { "message": {"id": ...}, "server": {"id": ...}, "user": {"id": ...} }

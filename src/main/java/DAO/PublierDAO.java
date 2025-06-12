@@ -34,6 +34,18 @@ public class PublierDAO {
         });
     }
 
+    public List<Publier> findByServerId(int serverId) {
+        return execute(em ->
+                em.createQuery("""
+            SELECT p FROM Publier p
+            WHERE p.server.id = :serverId
+        """, Publier.class)
+                        .setParameter("serverId", serverId)
+                        .getResultList()
+        );
+    }
+
+
     // ===== Méthodes utilitaires =====
     private <T> T execute(DAOOperation<T> operation) {
         EntityManager em = emf.createEntityManager();
