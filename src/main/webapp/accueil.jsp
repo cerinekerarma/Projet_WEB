@@ -85,6 +85,11 @@
             color: inherit;
         }
 
+        a.server {
+            text-decoration: none;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -94,9 +99,9 @@
     <% List<IntegrerClient> serveurs = (List<IntegrerClient>) request.getAttribute("serveurs"); %>
     <% if (serveurs != null) {
         for (IntegrerClient s : serveurs) { %>
-    <div class="server" title="<%= s.getServer().getNom() %>">
+    <a class="server" title="<%= s.getServer().getNom() %>" href="ServerConversationController?serverId=<%= s.getServer().getId() %>">
         <%= s.getServer().getNom().charAt(0) %>
-    </div>
+    </a>
     <%   }
     } else { %>
     <div style="color: #b9bbbe; font-size: 12px;">Aucun serveur</div>
