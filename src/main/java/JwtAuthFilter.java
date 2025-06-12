@@ -14,6 +14,11 @@ public class JwtAuthFilter implements Filter {
 
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
+        String path = request.getServletPath();
+        if (path.equals("/inscription") && request.getMethod().equalsIgnoreCase("POST")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

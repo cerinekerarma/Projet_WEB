@@ -4,9 +4,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>Connexion - Mon App</title>
+    <title>Inscription - Mon App</title>
     <style>
-        /* Style inspiré de Discord */
         body {
             background-color: #36393f;
             color: #fff;
@@ -36,6 +35,7 @@
             color: #b9bbbe;
         }
         input[type="text"],
+        input[type="email"],
         input[type="password"] {
             width: 100%;
             padding: 12px;
@@ -46,8 +46,7 @@
             color: #dcddde;
             font-size: 16px;
         }
-        input[type="text"]::placeholder,
-        input[type="password"]::placeholder {
+        input::placeholder {
             color: #72767d;
         }
         button {
@@ -74,6 +73,15 @@
             font-weight: 600;
             color: white;
         }
+        .success {
+            background-color: #43b581;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 600;
+            color: white;
+        }
         .footer {
             text-align: center;
             margin-top: 10px;
@@ -88,29 +96,38 @@
 </head>
 <body>
 <div class="login-container">
-    <h2>Connexion</h2>
+    <h2>Inscription</h2>
 
     <%
-        String error = request.getParameter("error");
-        if (error != null) {
+        String erreur = (String) request.getAttribute("erreur");
+        String succes = (String) request.getAttribute("succes");
+        if (erreur != null) {
     %>
-    <div class="error"><%= error %></div>
+    <div class="error"><%= erreur %></div>
+    <%
+        }
+        if (succes != null) {
+    %>
+    <div class="success"><%= succes %></div>
     <%
         }
     %>
 
-    <form action="AuthClientController" method="post">
+    <form action="inscription" method="post">
         <label for="login">Login</label>
         <input type="text" id="login" name="login" placeholder="user123" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
 
         <label for="password">Mot de passe</label>
         <input type="password" id="password" name="password" placeholder="Votre mot de passe" required>
 
-        <button type="submit">Se connecter</button>
+        <button type="submit">S'inscrire</button>
     </form>
 
     <div class="footer">
-        Pas encore de compte ? <a href="inscription.jsp">Inscrivez-vous</a>
+        Déjà un compte ? <a href="login.jsp">Connectez-vous</a>
     </div>
 </div>
 </body>
