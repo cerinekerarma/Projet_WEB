@@ -40,42 +40,50 @@ public class AddFriendController extends HttpServlet {
             conn.setRequestProperty("Authorization", "Bearer " + jwt);
             conn.setRequestProperty("Accept", "application/json");
 
+            // Debug: Affiche l'URL appelée
+            System.out.println("[DEBUG] URL appelée: " + url);
+
             List<Map<String, Object>> users;
             try (InputStream is = conn.getInputStream()) {
                 users = mapper.readValue(is, new TypeReference<>() {});
             }
             conn.disconnect();
 
-            // 2. Cherche l'utilisateur par login
+            // Debug: Affiche la réponse complète
+            System.out.println("[DEBUG] Réponse API: " + users);
+
+            // 2. Cherche l'utilisateur par login (id dans ton cas)
             Map<String, Object> friend = null;
             for (Map<String, Object> user : users) {
-                Object loginObj = user.get("login");
-                if (loginObj != null && friendLogin.equalsIgnoreCase(loginObj.toString())) {
+                Object userLogin = user.get("id"); // Dans ta réponse JSON, le login est dans "id"
+                if (userLogin != null && userLogin.toString().equalsIgnoreCase(friendLogin)) {
                     friend = user;
                     break;
                 }
             }
 
             if (friend == null) {
+                System.out.println("[DEBUG] Utilisateur non trouvé dans la liste: " + friendLogin);
                 req.setAttribute("error", "Utilisateur non trouvé");
                 req.getRequestDispatcher("addFriends.jsp").forward(req, resp);
                 return;
             }
 
-            // 3. Vérifie que l'ID existe
-            Object idObj = friend.get("id");
-            if (idObj == null) {
-                req.setAttribute("error", "L'utilisateur trouvé n'a pas d'ID");
+            String friendId = friend.get("id").toString();
+            System.out.println("[DEBUG] Ami trouvé: " + friendId);
+
+            // 3. Vérifie qu'on ne s'ajoute pas soi-même
+            if (friendId.equals(currentUserId)) {
+                req.setAttribute("error", "Vous ne pouvez pas vous ajouter vous-même");
                 req.getRequestDispatcher("addFriends.jsp").forward(req, resp);
                 return;
             }
-            String friendId = idObj.toString();
 
             // 4. Envoie un message automatique
             String sendDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
             Map<String, Object> messageMap = new HashMap<>();
-            messageMap.put("contenu", "Bonjour nouveau ami !");
+            messageMap.put("contenu", "Bonjour new friend !");
             messageMap.put("sendDate", sendDate);
 
             Map<String, String> senderMap = new HashMap<>();
@@ -100,12 +108,12 @@ public class AddFriendController extends HttpServlet {
             }
 
             if (messageConn.getResponseCode() == HttpURLConnection.HTTP_CREATED) {
-                req.setAttribute("success", "Ami ajouté avec succès : " + friendLogin);
+                req.setAttribute("success", "Ami ajouté avec succès: " + friendId);
                 req.setAttribute("friendId", friendId);
             } else {
-                String errorMsg = "Erreur lors de l'envoi du message";
+                String errorMsg = "Erreur lors de l'envoi du message (Code: " + messageConn.getResponseCode() + ")";
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(messageConn.getErrorStream()))) {
-                    errorMsg += ": " + br.readLine();
+                    errorMsg += " - " + br.readLine();
                 }
                 req.setAttribute("error", errorMsg);
             }

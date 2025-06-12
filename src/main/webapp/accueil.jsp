@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*, DAO.*" %>
-<%@ page import="Client.POJO.ServerClient" %>
+<%@ page import="Client.Controller.LogoutController" %>
 <%@ page import="Client.POJO.UserClient" %>
 <%@ page import="Client.POJO.IntegrerClient" %>
 <!DOCTYPE html>
@@ -165,7 +165,7 @@
             Sélectionnez un serveur ou un utilisateur pour commencer à discuter.
         </div>
     </div>
-    <a href="LogoutController" class="logout-btn">Déconnexion</a>
+    <a href="${pageContext.request.contextPath}/logout" class="logout-btn">Déconnexion</a>
     <a href="addFriends.jsp" class="add-friend-btn">Ajouter des amis</a>
 
 
