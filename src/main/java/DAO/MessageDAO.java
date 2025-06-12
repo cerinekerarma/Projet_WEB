@@ -37,21 +37,29 @@ public class MessageDAO {
     public List<Message> findByServerId(int serverId) {
         return execute(em ->
                 em.createNativeQuery("""
-        SELECT m.id_message, m.contenu, m.date_envoie
-        FROM "Message" m
-        JOIN publier p ON m.id_message = p.id_message
-        WHERE p.id_server = ?
-    """, Message.class)
+                    SELECT m.id_message, m.contenu, m.date_envoie
+                    FROM "Message" m
+                    JOIN publier p ON m.id_message = p.id_message
+                    WHERE p.id_server = ?
+                """, Message.class)
                         .setParameter(1, serverId)
                         .getResultList()
         );
     }
 
-    public void insertIntoPublier(int messageId, int serverId, int userId) {
-        execute(em -> {
+    public void insertIntoPublier(int messageId, int serverId, String userId) {
+        executeInTransaction(em -> {
             Message message = em.find(Message.class, messageId);
             Server server = em.find(Server.class, serverId);
             User user = em.find(User.class, userId);
+
+            if (message == null || server == null || user == null) {
+                System.err.println("❌ Données manquantes :");
+                if (message == null) System.err.println("  -> Message introuvable : " + messageId);
+                if (server == null) System.err.println("  -> Serveur introuvable : " + serverId);
+                if (user == null) System.err.println("  -> Auteur introuvable : " + userId);
+                return;
+            }
 
             Publier publier = new Publier();
             publier.setMessage(message);
@@ -59,25 +67,35 @@ public class MessageDAO {
             publier.setUser(user);
 
             em.persist(publier);
-            return null;
+            em.flush(); // Force l’insertion tout de suite (utile pour debug)
+            System.out.println("✅ Entrée 'publier' insérée avec succès.");
         });
     }
 
-    public void insertIntoEcrire(int messageId, int senderId, int receiverId) {
-        execute(em -> {
+
+    public void insertIntoEcrire(int messageId, String senderId, String receiverId) {
+        executeInTransaction(em -> {
             Message message = em.find(Message.class, messageId);
             User sender = em.find(User.class, senderId);
             User receiver = em.find(User.class, receiverId);
 
-            Ecrire ecrire = new Ecrire();
-            ecrire.setMessage(message);
-            ecrire.setSender(sender);     // ou setUser1
-            ecrire.setReceiver(receiver); // ou setUser2
+            if (message == null || sender == null || receiver == null) {
+                System.err.println("❌ Données manquantes :");
+                if (message == null) System.err.println("  -> Message introuvable : " + messageId);
+                if (sender == null) System.err.println("  -> Expéditeur introuvable : " + senderId);
+                if (receiver == null) System.err.println("  -> Destinataire introuvable : " + receiverId);
+                return;
+            }
 
+            Ecrire ecrire = new Ecrire(message, sender, receiver);
             em.persist(ecrire);
-            return null;
+            em.flush();
+
+            System.out.println("✅ Ecrire persisté : " + messageId + " de " + senderId + " à " + receiverId);
         });
     }
+
+
 
     // ===== Méthodes utilitaires =====
     private <T> T execute(DAOOperation<T> operation) {

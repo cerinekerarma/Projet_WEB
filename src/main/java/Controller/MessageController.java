@@ -74,8 +74,8 @@ public class MessageController extends HttpServlet {
     }
 
     // POST /api/messages
-    // Corps JSON (message privé) : { "contenu": "...", "sendDate": "...", "sender": { "id": ... }, "receiver": { "id": ... } }
-    // Corps JSON (message serveur) : { "contenu": "...", "sendDate": "...", "auteur": { "id": ... }, "serverId": ... }
+// Corps JSON (message privé) : { "contenu": "...", "sendDate": "...", "sender": { "id": "..." }, "receiver": { "id": "..." } }
+// Corps JSON (message serveur) : { "contenu": "...", "sendDate": "...", "auteur": { "id": "..." }, "serverId": ... }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
@@ -97,11 +97,11 @@ public class MessageController extends HttpServlet {
 
             if (jsonNode.has("serverId") && jsonNode.has("auteur")) {
                 Integer serverId = jsonNode.get("serverId").asInt();
-                Integer auteurId = jsonNode.get("auteur").get("id").asInt();
+                String auteurId = jsonNode.get("auteur").get("id").asText();
                 messageDAO.insertIntoPublier(message.getId(), serverId, auteurId);
             } else if (jsonNode.has("sender") && jsonNode.has("receiver")) {
-                Integer senderId = jsonNode.get("sender").get("id").asInt();
-                Integer receiverId = jsonNode.get("receiver").get("id").asInt();
+                String senderId = jsonNode.get("sender").get("id").asText();
+                String receiverId = jsonNode.get("receiver").get("id").asText();
                 messageDAO.insertIntoEcrire(message.getId(), senderId, receiverId);
             } else {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -117,6 +117,7 @@ public class MessageController extends HttpServlet {
             resp.getWriter().write("Erreur lors de la création du message : " + e.getMessage());
         }
     }
+
 
     // PUT /api/messages?id=1
     // Corps JSON avec champs à modifier (ex: contenu)
