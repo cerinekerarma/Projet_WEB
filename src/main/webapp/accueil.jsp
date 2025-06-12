@@ -85,6 +85,43 @@
             color: inherit;
         }
 
+        .logout-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f04747;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        .logout-btn:hover {
+            background-color: #d33a3a;
+        }
+        .add-friend-btn {
+            position: absolute;
+            top: 60px; /* en dessous du bouton déconnexion */
+            right: 10px;
+            background-color: #7289da;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .add-friend-btn:hover {
+            background-color: #5b6eae;
+        }
+
+
     </style>
 </head>
 <body>
@@ -128,6 +165,9 @@
             Sélectionnez un serveur ou un utilisateur pour commencer à discuter.
         </div>
     </div>
+    <a href="LogoutController" class="logout-btn">Déconnexion</a>
+    <a href="addFriends.jsp" class="add-friend-btn">Ajouter des amis</a>
+
 
 </div>
 </body>
