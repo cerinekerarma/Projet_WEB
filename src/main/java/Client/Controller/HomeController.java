@@ -1,5 +1,6 @@
 package Client.Controller;
 
+import Client.POJO.IntegrerClient;
 import Client.POJO.ServerClient;
 import Client.POJO.UserClient;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,7 +32,7 @@ public class HomeController extends HttpServlet {
 
         try {
             // Appel aux serveurs
-            List<ServerClient> serveurs = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/servers?adminId=" + login , jwt, new TypeReference<>() {});
+            List<IntegrerClient> serveurs = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/integrer?userId=" + login , jwt, new TypeReference<>() {});
             req.setAttribute("serveurs", serveurs);
 
             // Appel aux utilisateurs pour les messages privés

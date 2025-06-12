@@ -2,6 +2,7 @@
 <%@ page import="java.util.*, DAO.*" %>
 <%@ page import="Client.POJO.ServerClient" %>
 <%@ page import="Client.POJO.UserClient" %>
+<%@ page import="Client.POJO.IntegrerClient" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -90,11 +91,11 @@
 
 <!-- Colonne de gauche : Liste des serveurs -->
 <div class="sidebar">
-    <% List<ServerClient> serveurs = (List<ServerClient>) request.getAttribute("serveurs"); %>
+    <% List<IntegrerClient> serveurs = (List<IntegrerClient>) request.getAttribute("serveurs"); %>
     <% if (serveurs != null) {
-        for (ServerClient s : serveurs) { %>
-    <div class="server" title="<%= s.getNom() %>">
-        <%= s.getNom().charAt(0) %>
+        for (IntegrerClient s : serveurs) { %>
+    <div class="server" title="<%= s.getServer().getNom() %>">
+        <%= s.getServer().getNom().charAt(0) %>
     </div>
     <%   }
     } else { %>

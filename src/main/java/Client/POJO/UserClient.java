@@ -6,16 +6,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserClient {
     private String id;           // <-- nouveau champ id
-    private String login;
     private String email;
     private byte[] password;
     private Date creationDate;
 
     public UserClient() {}
 
-    public UserClient(String id, String login, String email, byte[] password, Date creationDate) {
+    public UserClient(String id, String email, byte[] password, Date creationDate) {
         this.id = id;
-        this.login = login;
         this.email = email;
         this.password = password;
         this.creationDate = creationDate;
@@ -28,14 +26,6 @@ public class UserClient {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
     }
 
     public String getEmail() {
