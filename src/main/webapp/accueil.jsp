@@ -122,6 +122,20 @@
             background-color: #5b6eae;
         }
 
+        .sidebar .server {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            background-color: #5865f2;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            color: white;                /* texte blanc */
+            text-decoration: none;       /* pas de soulignement */
+        }
     </style>
 </head>
 <body>
@@ -131,14 +145,15 @@
     <% List<IntegrerClient> serveurs = (List<IntegrerClient>) request.getAttribute("serveurs"); %>
     <% if (serveurs != null) {
         for (IntegrerClient s : serveurs) { %>
-    <div class="server" title="<%= s.getServer().getNom() %>">
+    <a href="ServerConversationController?serverId=<%= s.getServer().getId() %>"
+       class="server" title="<%= s.getServer().getNom() %>">
         <%= s.getServer().getNom().charAt(0) %>
-    </div>
+    </a>
     <%   }
     } else { %>
     <div style="color: #b9bbbe; font-size: 12px;">Aucun serveur</div>
     <% } %>
-    <a href="joinServer.jsp" class="server" title="Rejoindre un serveur" style="background-color: #3ba55d;">
+    <a href="joinServer.jsp" class="server add-server" title="Rejoindre un serveur" style="background-color: #3ba55d;">
         +
     </a>
 </div>
