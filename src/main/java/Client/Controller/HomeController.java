@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/HomeController")
@@ -25,16 +26,17 @@ public class HomeController extends HttpServlet {
             res.sendRedirect("login.jsp?error=Veuillez vous reconnecter");
             return;
         }
-
+        String login = (String) session.getAttribute("login");
         String jwt = (String) session.getAttribute("jwt");
 
         try {
             // Appel aux serveurs
-            List<ServerClient> serveurs = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/servers", jwt, new TypeReference<>() {});
+            List<ServerClient> serveurs = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/servers?adminId=" + login , jwt, new TypeReference<>() {});
             req.setAttribute("serveurs", serveurs);
 
             // Appel aux utilisateurs pour les messages privés
-            List<UserClient> conversations = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/conversations", jwt, new TypeReference<>() {});
+            //List<UserClient> conversations = fetchList("http://localhost:8080/Projet_WebServices_war_exploded/api/conversations", jwt, new TypeReference<>() {});
+            List<UserClient> conversations = new ArrayList<UserClient>();
             req.setAttribute("conversationsPrivees", conversations);
 
         } catch (IOException e) {
@@ -42,7 +44,7 @@ public class HomeController extends HttpServlet {
             return;
         }
 
-        req.getRequestDispatcher("home.jsp").forward(req, res);
+        req.getRequestDispatcher("accueil.jsp").forward(req, res);
     }
 
     private <T> List<T> fetchList(String apiUrl, String jwt, TypeReference<List<T>> typeRef) throws IOException {
