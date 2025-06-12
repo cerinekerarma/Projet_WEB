@@ -110,6 +110,7 @@
         <%= server != null ? server.getNom() : "Inconnu" %>
         <% if (server != null && server.getAdmin() != null) { %>
         <br><small style="font-size: 14px; color: #aaa;">Admin : <%= server.getAdmin().getId() %></small>
+        <br><small style="font-size: 14px; color: #aaa;">Id : <%= server.getId() %></small>
         <% } %>
     </h2>
 

@@ -136,6 +136,26 @@
             color: white;                /* texte blanc */
             text-decoration: none;       /* pas de soulignement */
         }
+
+        .create-server-btn {
+            position: absolute;
+            top: 110px; /* en dessous du bouton Ajouter des amis */
+            right: 10px;
+            background-color: #43b581;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+            display: inline-block;
+        }
+
+        .create-server-btn:hover {
+            background-color: #369b72;
+        }
     </style>
 </head>
 <body>
@@ -185,6 +205,8 @@
     </div>
     <a href="${pageContext.request.contextPath}/logout" class="logout-btn">Déconnexion</a>
     <a href="addFriends.jsp" class="add-friend-btn">Ajouter des amis</a>
+    <a href="createServer.jsp" class="create-server-btn">Créer un serveur</a>
+
 
 
 </div>
