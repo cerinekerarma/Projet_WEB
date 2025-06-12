@@ -109,6 +109,9 @@
     } else { %>
     <div style="color: #b9bbbe; font-size: 12px;">Aucun serveur</div>
     <% } %>
+    <a href="joinServer.jsp" class="server" title="Rejoindre un serveur" style="background-color: #3ba55d;">
+        +
+    </a>
 </div>
 
 <!-- Partie centrale et droite -->
