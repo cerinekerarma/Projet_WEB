@@ -77,6 +77,13 @@
             font-size: 20px;
             color: #dcddde;
         }
+
+        a.user {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
     </style>
 </head>
 <body>
@@ -104,9 +111,9 @@
         <% List<UserClient> conversations = (List<UserClient>) request.getAttribute("conversationsPrivees"); %>
         <% if (conversations != null) {
             for (UserClient u : conversations) { %>
-        <div class="user">
-            <%= u.getLogin() %>
-        </div>
+        <a href="ConversationController?userId=<%= u.getId() %>" class="user">
+            <%= u.getId() %>
+        </a>
         <%   }
         } else { %>
         <div style="color: #b9bbbe;">Aucune conversation</div>

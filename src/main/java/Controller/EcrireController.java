@@ -99,6 +99,23 @@ public class EcrireController extends HttpServlet {
                 resp.getWriter().write(objectMapper.writeValueAsString(interlocuteurs));
                 resp.setStatus(HttpServletResponse.SC_OK);
 
+            } else if (req.getParameter("userId1") != null && req.getParameter("userId2") != null) {
+                String userId1 = req.getParameter("userId1");
+                String userId2 = req.getParameter("userId2");
+
+                User user1 = userDAO.findById(userId1);
+                User user2 = userDAO.findById(userId2);
+
+                if (user1 == null || user2 == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User(s) not found");
+                    return;
+                }
+
+                // Méthode à créer dans EcrireDAO pour récupérer tous les messages échangés entre user1 et user2
+                List<Ecrire> conversation = ecrireDAO.findConversationBetweenUsers(user1, user2);
+
+                resp.getWriter().write(objectMapper.writeValueAsString(conversation));
+                resp.setStatus(HttpServletResponse.SC_OK);
             } else {
                 // Récupérer tous les Ecrire
                 List<Ecrire> all = ecrireDAO.findAll();

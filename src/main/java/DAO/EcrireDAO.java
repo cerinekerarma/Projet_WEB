@@ -109,5 +109,23 @@ public class EcrireDAO {
         return new ArrayList<>(allUsers);
     }
 
+    public List<Ecrire> findConversationBetweenUsers(User user1, User user2) {
+        EntityManager em = emf.createEntityManager();
+
+        try {
+            return em.createQuery(
+                            "SELECT e FROM Ecrire e WHERE " +
+                                    "(e.sender = :user1 AND e.receiver = :user2) OR " +
+                                    "(e.sender = :user2 AND e.receiver = :user1) " +
+                                    "ORDER BY e.message.sendDate", Ecrire.class)
+                    .setParameter("user1", user1)
+                    .setParameter("user2", user2)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+
 
 }
