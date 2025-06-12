@@ -92,6 +92,30 @@
             color: #5865f2;
             text-decoration: none;
         }
+
+        .logout-btn {
+            display: block;
+            background-color: #f04747;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .add-friend-btn {
+            display: block;
+            background-color: #43b581;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
