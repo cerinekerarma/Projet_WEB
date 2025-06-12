@@ -33,7 +33,7 @@ public class ServerController extends HttpServlet {
 
     // GET /api/servers           -> liste tous les serveurs
     // GET /api/servers?id=1      -> serveur id=1
-    // GET /api/servers?adminId=2 -> serveurs gérés par admin id=2
+    // GET /api/servers?adminId=alice -> serveurs gérés par admin id=alice
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -50,7 +50,7 @@ public class ServerController extends HttpServlet {
                 }
                 resp.getWriter().write(objectMapper.writeValueAsString(server));
             } else if (adminIdParam != null) {
-                int adminId = Integer.parseInt(adminIdParam);
+                String adminId = adminIdParam;  // <-- adminId is a String now
                 List<Server> servers = serverDAO.findByAdminId(adminId);
                 resp.getWriter().write(objectMapper.writeValueAsString(servers));
             } else {
@@ -64,7 +64,7 @@ public class ServerController extends HttpServlet {
     }
 
     // POST /api/servers
-    // JSON attendu : { "nom": "...", "admin": { "id": 1 } }
+    // JSON attendu : { "nom": "...", "admin": { "id": "alice" } }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
@@ -91,7 +91,7 @@ public class ServerController extends HttpServlet {
     }
 
     // PUT /api/servers?id=1
-    // JSON avec champs à modifier, ex: { "nom": "Nouveau nom", "admin": {"id": 2} }
+    // JSON avec champs à modifier, ex: { "nom": "Nouveau nom", "admin": {"id": "bob"} }
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idParam = req.getParameter("id");

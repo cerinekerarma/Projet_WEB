@@ -35,7 +35,7 @@ public class IntegrerController extends HttpServlet {
     }
 
     // GET /api/integrer              -> liste tous les Integrer
-    // GET /api/integrer?userId=1&serverId=2  -> intégration spécifique
+    // GET /api/integrer?userId=alice&serverId=2  -> intégration spécifique
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -53,7 +53,6 @@ public class IntegrerController extends HttpServlet {
                 String userId = userIdParam;
                 int serverId = Integer.parseInt(serverIdParam);
 
-                // On crée un Integrer temporaire avec User et Server chargés
                 User user = userDAO.findById(userId);
                 Server server = serverDAO.findById(serverId);
 
@@ -70,18 +69,14 @@ public class IntegrerController extends HttpServlet {
                 resp.getWriter().write(objectMapper.writeValueAsString(integrer));
                 resp.setStatus(HttpServletResponse.SC_OK);
             } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or serverId");
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid serverId");
             }
         } else if (userIdParam != null) {
-            // Liste les serveurs rejoints par un user
-            try {
-                int userId = Integer.parseInt(userIdParam);
-                List<Integrer> list = integrerDAO.findByUserId(userId);
-                resp.getWriter().write(objectMapper.writeValueAsString(list));
-                resp.setStatus(HttpServletResponse.SC_OK);
-            } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId");
-            }
+            // Liste les serveurs rejoints par un user (userId en String)
+            String userId = userIdParam;
+            List<Integrer> list = integrerDAO.findByUserId(userId);
+            resp.getWriter().write(objectMapper.writeValueAsString(list));
+            resp.setStatus(HttpServletResponse.SC_OK);
         } else {
             // Liste les utilisateurs ayant rejoint un serveur
             try {
@@ -96,13 +91,12 @@ public class IntegrerController extends HttpServlet {
     }
 
     // POST /api/integrer
-    // Corps JSON : { "user": { "id": 1 }, "server": { "id": 2 } }
+    // Corps JSON : { "user": { "id": "alice" }, "server": { "id": 2 } }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             Integrer integrer = objectMapper.readValue(req.getInputStream(), Integrer.class);
 
-            // Vérifier que user et server existent en base
             if (integrer.getUser() == null || integrer.getServer() == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "User and Server must be provided");
                 return;
@@ -124,7 +118,7 @@ public class IntegrerController extends HttpServlet {
         }
     }
 
-    // PUT /api/integrer?userId=1&serverId=2
+    // PUT /api/integrer?userId=alice&serverId=2
     // Corps JSON : { "dateJoined": "2023-04-01T12:00:00" }
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -146,18 +140,20 @@ public class IntegrerController extends HttpServlet {
                 return;
             }
 
+            // Ici tu devrais mettre à jour existingIntegrer avec les données reçues dans le corps, si nécessaire
+
             integrerDAO.update(existingIntegrer);
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(objectMapper.writeValueAsString(existingIntegrer));
 
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or serverId");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid serverId");
         } catch (Exception e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Integrer data: " + e.getMessage());
         }
     }
 
-    // DELETE /api/integrer?userId=1&serverId=2
+    // DELETE /api/integrer?userId=alice&serverId=2
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String userIdParam = req.getParameter("userId");
@@ -182,7 +178,7 @@ public class IntegrerController extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid userId or serverId");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid serverId");
         }
     }
 }

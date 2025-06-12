@@ -42,7 +42,7 @@ public class IntegrerDAO {
     }
 
     // Trouver tous les serveurs rejoints par un utilisateur
-    public List<Integrer> findByUserId(int userId) {
+    public List<Integrer> findByUserId(String userId) {
         return execute(em ->
                 em.createQuery("SELECT i FROM Integrer i WHERE i.id_user = :userId", Integrer.class)
                         .setParameter("userId", userId)

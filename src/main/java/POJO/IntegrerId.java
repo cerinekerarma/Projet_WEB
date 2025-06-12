@@ -34,11 +34,9 @@ public class IntegrerId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IntegrerId that = (IntegrerId) o;
-        return Objects.equals(user, that.user) &&
-                Objects.equals(server, that.server);
+        return Objects.equals(user, that.user) && Objects.equals(server, that.server);
     }
 
     @Override

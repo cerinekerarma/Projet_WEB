@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*, DAO.*" %>
-<%@ page import="POJO.Server" %>
-<%@ page import="POJO.User" %>
+<%@ page import="Client.POJO.ServerClient" %>
+<%@ page import="Client.POJO.UserClient" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -83,9 +83,9 @@
 
 <!-- Colonne de gauche : Liste des serveurs -->
 <div class="sidebar">
-    <% List<Server> serveurs = (List<Server>) request.getAttribute("serveurs"); %>
+    <% List<ServerClient> serveurs = (List<ServerClient>) request.getAttribute("serveurs"); %>
     <% if (serveurs != null) {
-        for (Server s : serveurs) { %>
+        for (ServerClient s : serveurs) { %>
     <div class="server" title="<%= s.getNom() %>">
         <%= s.getNom().charAt(0) %>
     </div>
@@ -101,11 +101,11 @@
     <!-- Colonne droite : Conversations privées -->
     <div class="private-messages">
         <h3>Conversations Privées</h3>
-        <% List<User> conversations = (List<User>) request.getAttribute("conversationsPrivees"); %>
+        <% List<UserClient> conversations = (List<UserClient>) request.getAttribute("conversationsPrivees"); %>
         <% if (conversations != null) {
-            for (User u : conversations) { %>
+            for (UserClient u : conversations) { %>
         <div class="user">
-            <%= u.getId() %>
+            <%= u.getLogin() %>
         </div>
         <%   }
         } else { %>

@@ -23,7 +23,7 @@ public class ServerDAO {
         );
     }
 
-    public List<Server> findByAdminId(int adminId) {
+    public List<Server> findByAdminId(String adminId) {
         return execute(em ->
                 em.createQuery("SELECT s FROM Server s WHERE s.admin.id = :adminId", Server.class)
                         .setParameter("adminId", adminId)
