@@ -96,6 +96,9 @@
 
 <!-- Colonne de gauche : Liste des serveurs -->
 <div class="sidebar">
+    <a href="logout" class="server" title="Se déconnecter" style="background-color: #f04747;">
+        Deco
+    </a>
     <% List<IntegrerClient> serveurs = (List<IntegrerClient>) request.getAttribute("serveurs"); %>
     <% if (serveurs != null) {
         for (IntegrerClient s : serveurs) { %>
