@@ -23,7 +23,10 @@ public class UserDAO {
 
     // Remplacé int par String pour le login
     public User findById(String login) {
-        return execute(em -> em.find(User.class, login));
+        EntityManager em = emf.createEntityManager();
+        User user = em.find(User.class, login);
+        em.close();
+        return user;
     }
 
     public List<User> findAll() {

@@ -6,8 +6,8 @@ import java.util.Objects;
 public class IntegrerId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String user;
-    private Integer server;
+    private String user; // login de User
+    private Integer server; // id de Server
 
     public IntegrerId() {}
 
@@ -34,9 +34,11 @@ public class IntegrerId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) return true;
+        if (!(o instanceof IntegrerId)) return false;
         IntegrerId that = (IntegrerId) o;
-        return Objects.equals(user, that.user) && Objects.equals(server, that.server);
+        return Objects.equals(user, that.user) &&
+                Objects.equals(server, that.server);
     }
 
     @Override

@@ -35,7 +35,7 @@ public class IntegrerController extends HttpServlet {
     }
 
     // GET /api/integrer              -> liste tous les Integrer
-    // GET /api/integrer?userId=alice&serverId=2  -> intégration spécifique
+    // GET /api/integrer?login=alice&serverId=2  -> intégration spécifique
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -60,7 +60,7 @@ public class IntegrerController extends HttpServlet {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User or Server not found");
                     return;
                 }
-
+                System.out.println("Searching for Integrer with userId=" + userId + " and serverId=" + serverId);
                 Integrer integrer = integrerDAO.findById(userId, serverId);
                 if (integrer == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Integrer not found");

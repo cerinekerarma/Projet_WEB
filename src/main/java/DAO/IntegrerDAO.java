@@ -15,9 +15,9 @@ public class IntegrerDAO {
         executeInTransaction(em -> em.persist(integrer));
     }
 
-    public Integrer findById(int id) {
+    /*public Integrer findById(int id) {
         return execute(em -> em.find(Integrer.class, id));
-    }
+    }*/
 
     public Integrer findById(String userId, int serverId) {
         IntegrerId id = new IntegrerId(userId, serverId);
