@@ -44,7 +44,7 @@ public class IntegrerDAO {
     // Trouver tous les serveurs rejoints par un utilisateur
     public List<Integrer> findByUserId(String userId) {
         return execute(em ->
-                em.createQuery("SELECT i FROM Integrer i WHERE i.id_user = :userId", Integrer.class)
+                em.createQuery("SELECT i FROM Integrer i WHERE i.user.login = :userId", Integrer.class)
                         .setParameter("userId", userId)
                         .getResultList()
         );
@@ -53,7 +53,7 @@ public class IntegrerDAO {
     // Trouver tous les utilisateurs ayant rejoint un serveur
     public List<Integrer> findByServerId(int serverId) {
         return execute(em ->
-                em.createQuery("SELECT i FROM Integrer i WHERE i.id_server = :serverId", Integrer.class)
+                em.createQuery("SELECT i FROM Integrer i WHERE i.server.id = :serverId", Integrer.class)
                         .setParameter("serverId", serverId)
                         .getResultList()
         );

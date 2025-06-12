@@ -1,7 +1,9 @@
 package Client.POJO;
 
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserClient {
     private String login;
     private String email;
