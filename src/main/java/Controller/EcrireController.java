@@ -35,10 +35,6 @@ public class EcrireController extends HttpServlet {
         objectMapper = new ObjectMapper();
     }
 
-    // GET /api/ecrire                      -> liste tous les Ecrire
-    // GET /api/ecrire?messageId=1          -> ecrire spécifique par message
-    // GET /api/ecrire?senderId=1           -> messages envoyés par un utilisateur
-    // GET /api/ecrire?receiverId=1         -> messages reçus par un utilisateur
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");
@@ -46,66 +42,77 @@ public class EcrireController extends HttpServlet {
         String messageIdParam = req.getParameter("messageId");
         String senderIdParam = req.getParameter("senderId");
         String receiverIdParam = req.getParameter("receiverId");
+        String userIdParam = req.getParameter("userId");
 
-        if (messageIdParam == null && senderIdParam == null && receiverIdParam == null) {
-            // Lister tous
-            List<Ecrire> all = ecrireDAO.findAll();
-            resp.getWriter().write(objectMapper.writeValueAsString(all));
-            resp.setStatus(HttpServletResponse.SC_OK);
-
-        } else if (messageIdParam != null) {
-            // Chercher par messageId
-            try {
+        try {
+            if (messageIdParam != null) {
+                // Récupérer un Ecrire par message ID
                 int messageId = Integer.parseInt(messageIdParam);
                 Message message = messageDAO.findById(messageId);
                 if (message == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message not found");
                     return;
                 }
+
                 Ecrire ecrire = ecrireDAO.findByMessage(message);
                 if (ecrire == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Ecrire not found for this message");
                     return;
                 }
+
                 resp.getWriter().write(objectMapper.writeValueAsString(ecrire));
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid messageId");
-            }
 
-        } else if (senderIdParam != null) {
-            // Chercher par sender
-            try {
-                String senderId = senderIdParam;
-                User sender = userDAO.findById(senderId);
+            } else if (senderIdParam != null) {
+                // Récupérer tous les messages envoyés par un utilisateur
+                User sender = userDAO.findById(senderIdParam);
                 if (sender == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Sender not found");
                     return;
                 }
+
                 List<Ecrire> list = ecrireDAO.findBySender(sender);
                 resp.getWriter().write(objectMapper.writeValueAsString(list));
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid senderId");
-            }
 
-        } else if (receiverIdParam != null) {
-            // Chercher par receiver
-            try {
-                String receiverId = receiverIdParam;
-                User receiver = userDAO.findById(receiverId);
+            } else if (receiverIdParam != null) {
+                // Récupérer tous les messages reçus par un utilisateur
+                User receiver = userDAO.findById(receiverIdParam);
                 if (receiver == null) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Receiver not found");
                     return;
                 }
+
                 List<Ecrire> list = ecrireDAO.findByReceiver(receiver);
                 resp.getWriter().write(objectMapper.writeValueAsString(list));
                 resp.setStatus(HttpServletResponse.SC_OK);
-            } catch (NumberFormatException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid receiverId");
+
+            } else if (userIdParam != null) {
+                // Récupérer tous les interlocuteurs d'un utilisateur
+                User user = userDAO.findById(userIdParam);
+                if (user == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
+                    return;
+                }
+
+                List<User> interlocuteurs = ecrireDAO.findDistinctUsersInConversationWith(user);
+                resp.getWriter().write(objectMapper.writeValueAsString(interlocuteurs));
+                resp.setStatus(HttpServletResponse.SC_OK);
+
+            } else {
+                // Récupérer tous les Ecrire
+                List<Ecrire> all = ecrireDAO.findAll();
+                resp.getWriter().write(objectMapper.writeValueAsString(all));
+                resp.setStatus(HttpServletResponse.SC_OK);
             }
+
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid parameter format");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error: " + e.getMessage());
         }
     }
+
 
     // POST /api/ecrire
     // JSON: { "message": { "id": 1 }, "sender": { "id": 2 }, "receiver": { "id": 3 } }
