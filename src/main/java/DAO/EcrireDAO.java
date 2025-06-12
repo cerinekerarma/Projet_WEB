@@ -7,7 +7,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class EcrireDAO {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PU_JPA");
@@ -77,4 +80,34 @@ public class EcrireDAO {
         em.close();
         return list;
     }
+
+    public List<User> findDistinctUsersInConversationWith(User user) {
+        EntityManager em = emf.createEntityManager();
+
+        List<User> sentTo = em.createQuery("""
+        SELECT DISTINCT e.receiver
+        FROM Ecrire e
+        WHERE e.sender = :user
+        """, User.class)
+                .setParameter("user", user)
+                .getResultList();
+
+        List<User> receivedFrom = em.createQuery("""
+        SELECT DISTINCT e.sender
+        FROM Ecrire e
+        WHERE e.receiver = :user
+        """, User.class)
+                .setParameter("user", user)
+                .getResultList();
+
+        em.close();
+
+        // Fusionner les deux listes en supprimant les doublons
+        Set<User> allUsers = new HashSet<>(sentTo);
+        allUsers.addAll(receivedFrom);
+
+        return new ArrayList<>(allUsers);
+    }
+
+
 }
